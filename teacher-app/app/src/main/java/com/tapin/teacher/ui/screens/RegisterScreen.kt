@@ -1,17 +1,21 @@
 package com.tapin.teacher.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tapin.teacher.R
 import com.tapin.teacher.ui.Ink
 import com.tapin.teacher.ui.Ink40
 import com.tapin.teacher.ui.Paper
@@ -28,81 +32,117 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val canSubmit = !busy && fullName.length >= 3 && email.contains("@") && password.length >= 6
+    val canSubmit = !busy && fullName.length >= 3 &&
+        email.contains("@") && password.length >= 6
 
     Scaffold(
         containerColor = Paper,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Регистрација — Професор", style = MaterialTheme.typography.titleMedium) },
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !busy) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад", tint = Ink)
+                        Icon(Icons.Outlined.ArrowBack,
+                             contentDescription = "Назад",
+                             tint = Ink)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Paper)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Paper
+                )
             )
         }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).padding(horizontal = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                "Креирај професорски профил.",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Ink,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            Text(
-                "Податоците ќе се зачуваат во базата.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Ink40
+            Image(
+                painter = painterResource(R.drawable.tapin_logo),
+                contentDescription = "TapIn",
+                modifier = Modifier.height(112.dp)
             )
 
-            OutlinedTextField(
+            Spacer(Modifier.height(20.dp))
+
+            Text("Регистрирај се",
+                 style = MaterialTheme.typography.titleLarge,
+                 color = Ink)
+            Spacer(Modifier.height(6.dp))
+            Text("Професорски профил за пристап кон контролната табла.",
+                 style = MaterialTheme.typography.bodySmall,
+                 color = Ink40,
+                 textAlign = TextAlign.Center)
+
+            Spacer(Modifier.height(24.dp))
+
+            FieldLabel("Име и презиме")
+            WebStyleField(
                 value = fullName,
                 onValueChange = { fullName = it },
-                label = { Text("Име и презиме") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !busy
+                placeholder = "Име Презиме",
+                enabled = !busy,
             )
-            OutlinedTextField(
+
+            Spacer(Modifier.height(14.dp))
+
+            FieldLabel("Е-пошта")
+            WebStyleField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Е-пошта") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                enabled = !busy
+                placeholder = "ime.prezime@ugd.edu.mk",
+                keyboardType = KeyboardType.Email,
+                enabled = !busy,
             )
-            OutlinedTextField(
+
+            Spacer(Modifier.height(14.dp))
+
+            FieldLabel("Лозинка")
+            WebStyleField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Лозинка (мин. 6)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                enabled = !busy
+                placeholder = "Минимум 6 знаци",
+                isPassword = true,
+                keyboardType = KeyboardType.Password,
+                enabled = !busy,
             )
 
             if (error != null) {
-                Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(10.dp))
+                Text(error,
+                     color = MaterialTheme.colorScheme.error,
+                     style = MaterialTheme.typography.bodySmall,
+                     modifier = Modifier.fillMaxWidth())
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(20.dp))
+
             Button(
                 onClick = { onRegister(email, password, fullName) },
                 enabled = canSubmit,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Paper)
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Ink,
+                    contentColor = Paper,
+                    disabledContainerColor = Ink.copy(alpha = 0.4f),
+                )
             ) {
-                if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = Paper, strokeWidth = 2.dp)
-                else Text("Креирај профил", style = MaterialTheme.typography.titleMedium)
+                if (busy) CircularProgressIndicator(
+                    Modifier.size(16.dp),
+                    color = Paper,
+                    strokeWidth = 2.dp
+                )
+                else Text("Креирај профил",
+                          style = MaterialTheme.typography.labelLarge)
             }
+
+            Spacer(Modifier.height(20.dp))
         }
     }
 }

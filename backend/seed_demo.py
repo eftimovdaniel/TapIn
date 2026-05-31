@@ -61,7 +61,11 @@ def _post(client: httpx.Client, path: str, json: dict, headers: dict | None = No
     r = client.post(API + path, json=json, headers=headers, timeout=TIMEOUT)
     if r.status_code >= 400:
         raise RuntimeError(f"POST {path} → {r.status_code}: {r.text[:200]}")
-    return r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+    if r.status_code == 204 or not r.content:
+        return {}
+    if not r.headers.get("content-type", "").startswith("application/json"):
+        return {}
+    return r.json()
 
 
 def _get(client: httpx.Client, path: str, headers: dict | None = None) -> dict | list:

@@ -1,7 +1,10 @@
 import { api, auth } from "./api.js";
 
+// Ako ima token, proveri dali e validen — inaku izbrishi go
 if (auth.isLoggedIn()) {
-  location.href = "./dashboard.html";
+  api.me()
+    .then(() => { location.href = "./dashboard.html"; })
+    .catch(() => { auth.clear(); });
 }
 
 const form = document.getElementById("loginForm");

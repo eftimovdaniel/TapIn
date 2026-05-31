@@ -1,18 +1,25 @@
 package com.tapin.teacher.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tapin.teacher.R
 import com.tapin.teacher.ui.Ink
+import com.tapin.teacher.ui.Ink20
 import com.tapin.teacher.ui.Ink40
+import com.tapin.teacher.ui.Ink60
 import com.tapin.teacher.ui.Paper
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,69 +35,152 @@ fun LoginScreen(
 
     Scaffold(containerColor = Paper) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).padding(horizontal = 28.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(top = 24.dp, bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("TAPIN — ПРОФЕСОР", style = MaterialTheme.typography.labelSmall, color = Ink40)
-                Text("v1.0", style = MaterialTheme.typography.labelSmall, color = Ink40)
+            Spacer(Modifier.weight(0.5f))
+
+            Image(
+                painter = painterResource(R.drawable.tapin_logo),
+                contentDescription = "TapIn",
+                modifier = Modifier.height(128.dp)
+            )
+
+            Spacer(Modifier.height(28.dp))
+
+            Text("Најави се",
+                 style = MaterialTheme.typography.titleLarge,
+                 color = Ink)
+            Spacer(Modifier.height(6.dp))
+            Text("Започни сесија. Собирај присуства.",
+                 style = MaterialTheme.typography.bodySmall,
+                 color = Ink40,
+                 textAlign = TextAlign.Center)
+
+            Spacer(Modifier.height(28.dp))
+
+            FieldLabel("Е-пошта")
+            WebStyleField(
+                value = email,
+                onValueChange = { email = it },
+                placeholder = "ime.prezime@ugd.edu.mk",
+                keyboardType = KeyboardType.Email,
+                enabled = !busy,
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            FieldLabel("Лозинка")
+            WebStyleField(
+                value = password,
+                onValueChange = { password = it },
+                placeholder = "",
+                keyboardType = KeyboardType.Password,
+                isPassword = true,
+                enabled = !busy,
+            )
+
+            if (error != null) {
+                Spacer(Modifier.height(10.dp))
+                Text(error,
+                     color = MaterialTheme.colorScheme.error,
+                     style = MaterialTheme.typography.bodySmall,
+                     modifier = Modifier.fillMaxWidth())
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Text("Најави се.", style = MaterialTheme.typography.headlineLarge, color = Ink)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Започни сесија.\nСобирај присуства.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Ink40,
-                    textAlign = TextAlign.Center
+            Spacer(Modifier.height(20.dp))
+
+            Button(
+                onClick = { onLogin(email, password) },
+                enabled = !busy && email.isNotBlank() && password.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Ink,
+                    contentColor = Paper,
+                    disabledContainerColor = Ink.copy(alpha = 0.4f),
                 )
+            ) {
+                if (busy) CircularProgressIndicator(
+                    Modifier.size(16.dp),
+                    color = Paper,
+                    strokeWidth = 2.dp
+                )
+                else Text("Најави се",
+                          style = MaterialTheme.typography.labelLarge)
             }
 
-            Column {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Е-пошта") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    enabled = !busy
-                )
-                Spacer(Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Лозинка") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    enabled = !busy
-                )
+            Spacer(Modifier.height(28.dp))
 
-                if (error != null) {
-                    Spacer(Modifier.height(12.dp))
-                    Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                }
-
-                Spacer(Modifier.height(24.dp))
-                Button(
-                    onClick = { onLogin(email, password) },
-                    enabled = !busy && email.isNotBlank() && password.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Paper)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Немаш профил? ",
+                     style = MaterialTheme.typography.bodySmall,
+                     color = Ink40)
+                TextButton(
+                    onClick = onGoToRegister,
+                    enabled = !busy,
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                 ) {
-                    if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = Paper, strokeWidth = 2.dp)
-                    else Text("Најави се", style = MaterialTheme.typography.titleMedium)
-                }
-
-                Spacer(Modifier.height(12.dp))
-                TextButton(onClick = onGoToRegister, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
-                    Text("Немам профил — Регистрирај се", color = Ink)
+                    Text("Регистрирај се",
+                         style = MaterialTheme.typography.bodySmall,
+                         color = Ink)
                 }
             }
+
+            Spacer(Modifier.weight(1f))
         }
     }
+}
+
+@Composable
+internal fun FieldLabel(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        color = Ink60,
+        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun WebStyleField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isPassword: Boolean = false,
+    enabled: Boolean = true,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = if (placeholder.isNotBlank()) {
+            { Text(placeholder, color = Ink40,
+                   style = MaterialTheme.typography.bodySmall) }
+        } else null,
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        textStyle = MaterialTheme.typography.bodyMedium,
+        visualTransformation = if (isPassword) PasswordVisualTransformation()
+                               else androidx.compose.ui.text.input.VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        enabled = enabled,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Ink,
+            unfocusedBorderColor = Ink20,
+            disabledBorderColor = Ink20,
+            cursorColor = Ink,
+            focusedTextColor = Ink,
+            unfocusedTextColor = Ink,
+            focusedContainerColor = Paper,
+            unfocusedContainerColor = Paper,
+        )
+    )
 }

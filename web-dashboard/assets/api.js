@@ -4,21 +4,38 @@
  *
  * BASE_URL prioritet:
  *   1. window.__TAPIN_API_BASE__   (runtime override, npr. preku <script>)
- *   2. "" — koga dashboard-ot se servira preku nginx koj proxy-ja /api/* (Docker)
- *   3. "http://localhost:8080"     (dev: dashboard na :8000, backend na :8080)
+ *   2. "" — koga e nginx Docker (port 80) — proxy-ja /api/*
+ *   3. http://<host>:8080          (dev: dashboard na :8000, backend na :8080)
+ *      Avtomatski koristi ist host kako toj na browser-ot, taka da raboti
+ *      i preku LAN IP (npr. http://192.168.0.106:8000 → backend na .106:8080)
  */
 function detectBaseUrl() {
   if (typeof window !== "undefined" && window.__TAPIN_API_BASE__) {
     return window.__TAPIN_API_BASE__;
   }
-  // Vo Docker dashboard-ot se servira na port 80 — nginx-ot proksira /api/*
-  if (typeof location !== "undefined" && (location.port === "" || location.port === "80")) {
+  if (typeof location === "undefined") return "http://localhost:8080";
+
+  // Same-origin slucai (nema CORS / Safari ITP problemi):
+  //   - Docker / nginx (port 80 / 443)
+  //   - FastAPI servisot direktno (port 8080) — sega frontend i backend zaedno
+  if (
+    location.port === "" ||
+    location.port === "80" ||
+    location.port === "443" ||
+    location.port === "8080"
+  ) {
     return "";
   }
-  return "http://localhost:8080";
+
+  // Dev: dashboard na bilo koj drug port (5173, 3000…), backend e na :8080
+  const proto = location.protocol === "https:" ? "https:" : "http:";
+  return `${proto}//${location.hostname}:8080`;
 }
 
 export const BASE_URL = detectBaseUrl();
+if (typeof console !== "undefined") {
+  console.log("[TapIn] API BASE_URL =", BASE_URL || "(same-origin)");
+}
 
 const TOKEN_KEY = "tapin.token";
 const USER_KEY = "tapin.user";
@@ -81,11 +98,29 @@ async function call(path, { method = "GET", body, query } = {}) {
   }
 
   if (resp.status === 401) {
-    auth.clear();
-    if (!location.pathname.endsWith("index.html") && location.pathname !== "/") {
-      location.href = "./index.html";
+    let msg = "Сесијата истече. Најави се повторно.";
+    try {
+      const j = await resp.json();
+      msg = j.detail || j.message || msg;
+    } catch {
+      /* ignore */
     }
-    throw new ApiError(401, "Сесијата истече. Најави се повторно.");
+
+    const isLoginAttempt =
+      path === "/api/login" ||
+      path === "/api/register" ||
+      path.startsWith("/api/auth/login") ||
+      path.startsWith("/api/auth/register");
+
+    if (!isLoginAttempt) {
+      auth.clear();
+      if (!location.pathname.endsWith("index.html") && location.pathname !== "/") {
+        location.href = "./index.html";
+      }
+      throw new ApiError(401, "Сесијата истече. Најави се повторно.");
+    }
+
+    throw new ApiError(401, msg);
   }
 
   if (!resp.ok) {
