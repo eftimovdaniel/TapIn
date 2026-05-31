@@ -93,13 +93,13 @@ fun SessionScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Nazad", tint = Ink)
+                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Назад", tint = Ink)
                     }
                 },
                 actions = {
                     if (state.session != null) {
                         IconButton(onClick = vm::refreshAttendance) {
-                            Icon(Icons.Outlined.Refresh, contentDescription = "Osvezi", tint = Ink)
+                            Icon(Icons.Outlined.Refresh, contentDescription = "Освежи", tint = Ink)
                         }
                     }
                 },
@@ -161,16 +161,16 @@ private fun StartCard(isStarting: Boolean, onStart: () -> Unit) {
             Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Sesijata uste ne e zapochnata",
+            Text("Сесијата сè уште не е започната",
                  style = MaterialTheme.typography.headlineMedium, color = Ink)
-            Text("Pritisni za da pochnesh sesija. Studentite ke mozhat da tapnat za atendansa.",
+            Text("Притисни за да започнеш сесија. Студентите ќе можат да тапнат за присуство.",
                  color = Ink40, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(4.dp))
             Button(
                 onClick = onStart,
                 enabled = !isStarting,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(50),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Paper)
             ) {
                 if (isStarting) {
@@ -178,7 +178,7 @@ private fun StartCard(isStarting: Boolean, onStart: () -> Unit) {
                 } else {
                     Icon(Icons.Outlined.PlayArrow, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Pochne sesija", style = MaterialTheme.typography.titleMedium)
+                    Text("Започни сесија", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -199,10 +199,10 @@ private fun ActiveCard(
     val nfcOk = nfcSupported && nfcEnabled
 
     val statusText = when {
-        !nfcSupported -> "Telefonot ne podderzhuva NFC"
-        !nfcEnabled -> "Vklji NFC od poshtenstvenoto meni"
-        tapBusy -> "Procesiranje..."
-        else -> "Spremen za tap"
+        !nfcSupported -> "Телефонот не поддржува NFC"
+        !nfcEnabled -> "Вклучи NFC од поставките"
+        tapBusy -> "Процесирање..."
+        else -> "Подготвен за тап"
     }
 
     val statusColor = when {
@@ -222,7 +222,7 @@ private fun ActiveCard(
                     Modifier.size(8.dp).clip(CircleShape).background(Success)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("AKTIVNA SESIJA",
+                Text("АКТИВНА СЕСИЈА",
                      color = Color(0xFFCFCFD2),
                      style = MaterialTheme.typography.labelSmall)
             }
@@ -233,7 +233,7 @@ private fun ActiveCard(
                  color = statusColor,
                  style = MaterialTheme.typography.bodyMedium)
 
-            Text("$attendanceCount ${if (attendanceCount == 1) "tap" else "tap-ovi"}",
+            Text("$attendanceCount ${if (attendanceCount == 1) "тап" else "тапови"}",
                  color = Paper,
                  style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
 
@@ -246,7 +246,7 @@ private fun ActiveCard(
                 OutlinedButton(
                     onClick = onManual,
                     modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Paper, containerColor = Color.Transparent
                     ),
@@ -255,13 +255,13 @@ private fun ActiveCard(
                     Icon(Icons.Outlined.Edit, contentDescription = null,
                          modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Rachno")
+                    Text("Рачно")
                 }
                 Button(
                     onClick = onClose,
                     enabled = !isClosing,
                     modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Paper, contentColor = Ink
                     )
@@ -272,7 +272,7 @@ private fun ActiveCard(
                         Icon(Icons.Outlined.Close, contentDescription = null,
                              modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Zatvori")
+                        Text("Затвори")
                     }
                 }
             }
@@ -287,9 +287,9 @@ private fun ClosedCard(count: Int) {
             Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Sesijata e zatvorena",
+            Text("Сесијата е затворена",
                  style = MaterialTheme.typography.headlineMedium, color = Ink)
-            Text("$count studenti tapnaa atendansa.",
+            Text("$count студенти тапнаа присуство.",
                  color = Ink40, style = MaterialTheme.typography.bodyMedium)
         }
     }
@@ -344,15 +344,15 @@ private fun TapFeedbackBanner(lastTap: SessionViewModel.TapEvent?) {
     }
     val (text, sub, ok) = when (lastTap) {
         is SessionViewModel.TapEvent.Recorded ->
-            Triple("Zapishano", lastTap.name + (lastTap.number?.let { " · $it" } ?: ""), true)
+            Triple("Запишано", lastTap.name + (lastTap.number?.let { " · $it" } ?: ""), true)
         is SessionViewModel.TapEvent.Duplicate ->
-            Triple("Vekje zapishan", lastTap.name, false)
+            Triple("Веќе запишан", lastTap.name, false)
         is SessionViewModel.TapEvent.StudentNotFound ->
-            Triple("Student ne e najden", "Broj: ${lastTap.number}", false)
+            Triple("Студентот не е најден", "Број: ${lastTap.number}", false)
         is SessionViewModel.TapEvent.RawUid ->
-            Triple("Nepoznat tag", "UID: ${lastTap.uid}", false)
+            Triple("Непознат таг", "UID: ${lastTap.uid}", false)
         is SessionViewModel.TapEvent.Failed ->
-            Triple("Greshka", lastTap.message, false)
+            Triple("Грешка", lastTap.message, false)
     }
 
     Surface(
@@ -384,11 +384,11 @@ private fun TapFeedbackBanner(lastTap: SessionViewModel.TapEvent?) {
 @Composable
 private fun AttendanceList(items: List<AttendanceView>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("ATENDANSA",
+        Text("ПРИСУСТВО",
              color = Ink40,
              style = MaterialTheme.typography.labelSmall)
         if (items.isEmpty()) {
-            Text("Nema tap-ovi uste. Studentite go dopiraat telefonot.",
+            Text("Сè уште нема тапови. Студентите го допираат телефонот.",
                  color = Ink40,
                  style = MaterialTheme.typography.bodyMedium)
         } else {
@@ -436,12 +436,12 @@ private fun ManualEntryDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Paper,
-        title = { Text("Vnes broj na student") },
+        title = { Text("Внеси број на студент") },
         text = {
             OutlinedTextField(
                 value = num,
                 onValueChange = { num = it.filter { c -> c.isLetterOrDigit() || c == '-' } },
-                label = { Text("Broj na student") },
+                label = { Text("Број на студент") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -455,10 +455,10 @@ private fun ManualEntryDialog(
                 onClick = { onSubmit(num) },
                 enabled = num.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Paper)
-            ) { Text("Zapishi") }
+            ) { Text("Запиши") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Otkazhi", color = Ink60) }
+            TextButton(onClick = onDismiss) { Text("Откажи", color = Ink60) }
         }
     )
 }

@@ -42,10 +42,10 @@ fun CoursesScreen(
         containerColor = Paper,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Predmeti", style = MaterialTheme.typography.titleMedium, color = Ink) },
+                title = { Text("Предмети", style = MaterialTheme.typography.titleMedium, color = Ink) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Nazad", tint = Ink)
+                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Назад", tint = Ink)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Paper)
@@ -57,7 +57,7 @@ fun CoursesScreen(
                 contentColor = Paper,
                 onClick = { showCreate = true },
                 icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-                text = { Text("Nov predmet") }
+                text = { Text("Нов предмет") }
             )
         }
     ) { padding ->
@@ -71,11 +71,11 @@ fun CoursesScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Greshka pri vchituvanje", style = MaterialTheme.typography.titleMedium, color = Ink)
+                    Text("Грешка при вчитување", style = MaterialTheme.typography.titleMedium, color = Ink)
                     Spacer(Modifier.height(8.dp))
                     Text(state.error ?: "?", color = Ink40, style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(16.dp))
-                    OutlinedButton(onClick = vm::refresh) { Text("Probaj povtorno") }
+                    OutlinedButton(onClick = vm::refresh) { Text("Обиди се повторно") }
                 }
                 state.items.isEmpty() -> EmptyCourses()
                 else -> LazyColumn(
@@ -149,10 +149,10 @@ private fun EmptyCourses() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Nemash predmeti uste", style = MaterialTheme.typography.headlineMedium, color = Ink)
+        Text("Сè уште немаш предмети", style = MaterialTheme.typography.headlineMedium, color = Ink)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Pritisni „Nov predmet“ za da kreirash prv predmet.",
+            "Притисни „Нов предмет“ за да креираш прв предмет.",
             color = Ink40, style = MaterialTheme.typography.bodyMedium,
         )
     }
@@ -173,13 +173,13 @@ private fun CreateCourseDialog(
         containerColor = Paper,
         titleContentColor = Ink,
         textContentColor = Ink60,
-        title = { Text("Nov predmet") },
+        title = { Text("Нов предмет") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = code,
                     onValueChange = { code = it.uppercase() },
-                    label = { Text("Shifra (npr. FCSE-MA101)") },
+                    label = { Text("Шифра (на пр. FCSE-MA101)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -190,7 +190,7 @@ private fun CreateCourseDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Ime na predmet") },
+                    label = { Text("Име на предмет") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -213,12 +213,12 @@ private fun CreateCourseDialog(
                 if (busy) CircularProgressIndicator(
                     Modifier.size(16.dp), color = Paper, strokeWidth = 2.dp
                 )
-                else Text("Kreiraj")
+                else Text("Креирај")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !busy) {
-                Text("Otkazhi", color = Ink60)
+                Text("Откажи", color = Ink60)
             }
         }
     )

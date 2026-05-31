@@ -56,7 +56,7 @@ class SessionViewModel(private val course: CourseView) : ViewModel() {
             } catch (e: ApiException) {
                 _state.update { it.copy(isStarting = false, error = e.friendlyMessage) }
             } catch (e: Exception) {
-                _state.update { it.copy(isStarting = false, error = "Mrezni problem: ${e.message ?: "?"}") }
+                _state.update { it.copy(isStarting = false, error = "Мрежен проблем: ${e.message ?: "?"}") }
             }
         }
     }
@@ -77,7 +77,7 @@ class SessionViewModel(private val course: CourseView) : ViewModel() {
             } catch (e: ApiException) {
                 _state.update { it.copy(isClosing = false, error = e.friendlyMessage) }
             } catch (e: Exception) {
-                _state.update { it.copy(isClosing = false, error = "Mrezni problem: ${e.message ?: "?"}") }
+                _state.update { it.copy(isClosing = false, error = "Мрежен проблем: ${e.message ?: "?"}") }
             }
         }
     }
@@ -130,7 +130,7 @@ class SessionViewModel(private val course: CourseView) : ViewModel() {
                 val event = when {
                     resp.accepted > 0 -> TapEvent.Recorded(student.fullName, student.studentNumber)
                     resp.duplicates > 0 -> TapEvent.Duplicate(student.fullName)
-                    else -> TapEvent.Failed("Otfrleno (${resp.rejected})")
+                    else -> TapEvent.Failed("Отфрлено (${resp.rejected})")
                 }
                 _state.update { it.copy(tapBusy = false, lastTap = event) }
                 refreshAttendance()

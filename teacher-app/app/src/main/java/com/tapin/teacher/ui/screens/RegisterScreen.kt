@@ -34,10 +34,10 @@ fun RegisterScreen(
         containerColor = Paper,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Registracija — Profesor", style = MaterialTheme.typography.titleMedium) },
+                title = { Text("Регистрација — Професор", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !busy) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Nazad", tint = Ink)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад", tint = Ink)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Paper)
@@ -49,13 +49,13 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                "Kreiraj profesorski akaunt.",
+                "Креирај професорски профил.",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Ink,
                 modifier = Modifier.padding(top = 8.dp)
             )
             Text(
-                "Podatocite ke se zachuvaat vo bazata.",
+                "Податоците ќе се зачуваат во базата.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Ink40
             )
@@ -63,7 +63,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = fullName,
                 onValueChange = { fullName = it },
-                label = { Text("Ime i prezime") },
+                label = { Text("Име и презиме") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !busy
@@ -71,7 +71,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text("Е-пошта") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -80,7 +80,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Lozinka (min. 6)") },
+                label = { Text("Лозинка (мин. 6)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
@@ -97,11 +97,11 @@ fun RegisterScreen(
                 onClick = { onRegister(email, password, fullName) },
                 enabled = canSubmit,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(50),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Paper)
             ) {
                 if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = Paper, strokeWidth = 2.dp)
-                else Text("Kreiraj akaunt", style = MaterialTheme.typography.titleMedium)
+                else Text("Креирај профил", style = MaterialTheme.typography.titleMedium)
             }
         }
     }

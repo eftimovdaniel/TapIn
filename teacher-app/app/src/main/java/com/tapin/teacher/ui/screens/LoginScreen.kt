@@ -32,15 +32,15 @@ fun LoginScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("TAPIN — TEACHER", style = MaterialTheme.typography.labelSmall, color = Ink40)
+                Text("TAPIN — ПРОФЕСОР", style = MaterialTheme.typography.labelSmall, color = Ink40)
                 Text("v1.0", style = MaterialTheme.typography.labelSmall, color = Ink40)
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Text("Najavi se.", style = MaterialTheme.typography.headlineLarge, color = Ink)
+                Text("Најави се.", style = MaterialTheme.typography.headlineLarge, color = Ink)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Pochnete sesija.\nSobiraj atendansi.",
+                    "Започни сесија.\nСобирај присуства.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Ink40,
                     textAlign = TextAlign.Center
@@ -51,7 +51,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
+                    label = { Text("Е-пошта") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -61,7 +61,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Lozinka") },
+                    label = { Text("Лозинка") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
@@ -79,16 +79,16 @@ fun LoginScreen(
                     onClick = { onLogin(email, password) },
                     enabled = !busy && email.isNotBlank() && password.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Paper)
                 ) {
                     if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = Paper, strokeWidth = 2.dp)
-                    else Text("Najavi se", style = MaterialTheme.typography.titleMedium)
+                    else Text("Најави се", style = MaterialTheme.typography.titleMedium)
                 }
 
                 Spacer(Modifier.height(12.dp))
                 TextButton(onClick = onGoToRegister, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
-                    Text("Nemam akaunt — Registracija", color = Ink)
+                    Text("Немам профил — Регистрирај се", color = Ink)
                 }
             }
         }

@@ -36,14 +36,14 @@ class CoursesViewModel : ViewModel() {
             } catch (e: ApiException) {
                 _state.update { it.copy(isLoading = false, error = e.friendlyMessage) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = "Mrezni problem: ${e.message ?: "?"}") }
+                _state.update { it.copy(isLoading = false, error = "Мрежен проблем: ${e.message ?: "?"}") }
             }
         }
     }
 
     fun createCourse(code: String, name: String, onCreated: (CourseView) -> Unit) {
         if (code.isBlank() || name.isBlank()) {
-            _state.update { it.copy(createError = "Polnete kod i ime") }
+            _state.update { it.copy(createError = "Пополни шифра и име") }
             return
         }
         _state.update { it.copy(createBusy = true, createError = null) }
@@ -61,7 +61,7 @@ class CoursesViewModel : ViewModel() {
             } catch (e: ApiException) {
                 _state.update { it.copy(createBusy = false, createError = e.friendlyMessage) }
             } catch (e: Exception) {
-                _state.update { it.copy(createBusy = false, createError = "Mrezni problem: ${e.message ?: "?"}") }
+                _state.update { it.copy(createBusy = false, createError = "Мрежен проблем: ${e.message ?: "?"}") }
             }
         }
     }

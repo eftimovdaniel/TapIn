@@ -47,7 +47,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val resp = ApiClient.login(LoginRequest(email.trim(), password))
                 if (resp.user.role !in setOf("TEACHER", "ADMIN")) {
-                    _state.value = AuthState.LoggedOut(error = "Овој акаунт не е профессорски.")
+                    _state.value = AuthState.LoggedOut(error = "Овој профил не е професорски.")
                     return@launch
                 }
                 ApiClient.setToken(resp.token)
@@ -56,7 +56,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
-                _state.value = AuthState.LoggedOut(error = "Mrezni problem: ${e.message ?: "?"}")
+                _state.value = AuthState.LoggedOut(error = "Мрежен проблем: ${e.message ?: "?"}")
             }
         }
     }
@@ -79,7 +79,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
-                _state.value = AuthState.LoggedOut(error = "Mrezni problem: ${e.message ?: "?"}")
+                _state.value = AuthState.LoggedOut(error = "Мрежен проблем: ${e.message ?: "?"}")
             }
         }
     }

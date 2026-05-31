@@ -33,7 +33,7 @@ fun HomeScreen(
         containerColor = Paper,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("TapIn — Teacher",
+                title = { Text("TapIn — Професор",
                               style = MaterialTheme.typography.titleMedium, color = Ink) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Paper)
             )
@@ -46,10 +46,10 @@ fun HomeScreen(
             Surface(color = Ink10, shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("ULOGIRAN", style = MaterialTheme.typography.labelSmall, color = Ink40)
+                    Text("НАЈАВЕН", style = MaterialTheme.typography.labelSmall, color = Ink40)
                     Text(user.fullName, style = MaterialTheme.typography.headlineMedium, color = Ink)
                     Text(user.email, style = MaterialTheme.typography.bodyMedium, color = Ink40)
-                    Text("Rola: ${user.role}",
+                    Text("Улога: ${user.role}",
                          style = MaterialTheme.typography.bodyMedium, color = Ink40)
                 }
             }
@@ -69,10 +69,10 @@ fun HomeScreen(
                     Icon(Icons.Outlined.MenuBook, contentDescription = null, tint = Paper)
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Predmeti i sesii",
+                        Text("Предмети и сесии",
                              color = Paper,
                              style = MaterialTheme.typography.titleMedium)
-                        Text("Pochne sesija i registriraj atendansa preku NFC.",
+                        Text("Започни сесија и регистрирај присуство преку NFC.",
                              color = Color(0xFFCFCFD2),
                              style = MaterialTheme.typography.bodySmall)
                     }
@@ -85,12 +85,12 @@ fun HomeScreen(
             OutlinedButton(
                 onClick = onLogout,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(50)
+                shape = RoundedCornerShape(10.dp)
             ) {
                 Icon(Icons.Outlined.Logout, contentDescription = null,
                      modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Odjavi se", color = Ink)
+                Text("Одјави се", color = Ink)
             }
         }
     }
@@ -100,18 +100,18 @@ fun HomeScreen(
 private fun NfcStatusBadge(supported: Boolean, enabled: Boolean) {
     val (label, sub, labelColor) = when {
         !supported -> Triple(
-            "NFC ne e podderzhan",
-            "Atendansata raboti, ama bez tap.",
+            "NFC не е поддржан",
+            "Присуството работи, ама без тап.",
             Danger
         )
         !enabled -> Triple(
-            "NFC e isklucen",
-            "Vklji NFC vo poshtenstvenoto meni.",
+            "NFC е исклучен",
+            "Вклучи NFC во менито за поставки.",
             Danger
         )
         else -> Triple(
-            "NFC podgotven",
-            "Sesija + tap = avtomatska atendansa.",
+            "NFC подготвен",
+            "Сесија + тап = автоматско присуство.",
             Ink60
         )
     }
