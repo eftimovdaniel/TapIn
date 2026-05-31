@@ -19,10 +19,15 @@ import kotlinx.serialization.json.Json
 
 object ApiConfig {
     /**
-     * Android emulator: 10.0.2.2 maps to host's localhost.
-     * Real phone: replace with your laptop's LAN IP, e.g. http://192.168.1.42:8080
+     * BASE_URL — kade da se zakaci klientot.
+     *
+     *  Real telefon (Mac LAN IP):       http://192.168.0.106:8080
+     *  Android emulator na host Mac:    http://10.0.2.2:8080
+     *
+     * Ako Mac ti dobijе drug LAN IP (napr. drugo Wi-Fi), zameni go ovde
+     * i pokreni: ./gradlew assembleDebug   pa   adb install -r app-debug.apk
      */
-    const val BASE_URL = "http://10.0.2.2:8080"
+    const val BASE_URL = "http://192.168.0.106:8080"
 }
 
 class ApiException(val statusCode: Int, val friendlyMessage: String) : Exception(friendlyMessage)
