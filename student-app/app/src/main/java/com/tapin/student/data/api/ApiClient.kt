@@ -18,10 +18,12 @@ import kotlinx.serialization.json.Json
 
 object ApiConfig {
     /**
-     * Android emulator: 10.0.2.2 maps to host's localhost.
-     * Real phone: replace with your laptop's LAN IP.
+     * BASE_URL — kade da se zakaci klientot.
+     *
+     *  Real telefon (Mac LAN IP):       http://192.168.0.106:8080
+     *  Android emulator na host Mac:    http://10.0.2.2:8080
      */
-    const val BASE_URL = "http://10.0.2.2:8080"
+    const val BASE_URL = "http://192.168.0.106:8080"
 }
 
 class ApiException(val statusCode: Int, val friendlyMessage: String) : Exception(friendlyMessage)

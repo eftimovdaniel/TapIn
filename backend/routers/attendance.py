@@ -14,6 +14,7 @@ from schemas import (
     BulkAttendanceRequest,
     BulkAttendanceResponse,
 )
+from secure_nfc import NfcPayloadError, parse_and_verify
 
 router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
 
@@ -40,27 +41,49 @@ def upload_attendance(
 ) -> BulkAttendanceResponse:
     s = db.get(AttendanceSession, req.sessionId)
     if not s:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail="Сесијата не е најдена")
     if not user.is_admin and s.teacher_id != user.id:
-        raise HTTPException(status_code=403, detail="Not your session")
+        raise HTTPException(status_code=403, detail="Ова не е твоја сесија")
 
     accepted = 0
     duplicates = 0
     rejected = 0
+    invalid_sigs = 0
     ids: list[int] = []
 
     for r in req.records:
         try:
+            student_id = r.studentId
+
+            # Sigurnosen potpis: ako e prikachen, validira i resolvira student
+            if r.signedPayload:
+                try:
+                    verified = parse_and_verify(r.signedPayload)
+                except NfcPayloadError:
+                    invalid_sigs += 1
+                    continue
+                resolved = db.scalar(
+                    select(User).where(User.student_number == verified.student_number)
+                )
+                if not resolved:
+                    rejected += 1
+                    continue
+                student_id = resolved.id
+
+            if student_id is None:
+                rejected += 1
+                continue
+
             existing = db.scalar(
                 select(Attendance).where(
-                    Attendance.session_id == s.id, Attendance.student_id == r.studentId
+                    Attendance.session_id == s.id, Attendance.student_id == student_id
                 )
             )
             if existing:
                 duplicates += 1
                 continue
 
-            student = db.get(User, r.studentId)
+            student = db.get(User, student_id)
             if not student:
                 rejected += 1
                 continue
@@ -77,7 +100,13 @@ def upload_attendance(
             rejected += 1
 
     db.commit()
-    return BulkAttendanceResponse(accepted=accepted, duplicates=duplicates, rejected=rejected, ids=ids)
+    return BulkAttendanceResponse(
+        accepted=accepted,
+        duplicates=duplicates,
+        rejected=rejected,
+        invalidSignatures=invalid_sigs,
+        ids=ids,
+    )
 
 
 # ─── GET /api/attendance — lista (so filteri) ───

@@ -51,7 +51,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val resp = ApiClient.login(LoginRequest(email.trim(), password))
                 if (resp.user.role != "STUDENT") {
                     _state.value = AuthState.LoggedOut(
-                        error = "Ovaa aplikacija e samo za studenti."
+                        error = "Оваа апликација е само за студенти."
                     )
                     return@launch
                 }
@@ -62,7 +62,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
-                _state.value = AuthState.LoggedOut(error = "Mrezni problem: ${e.message ?: "?"}")
+                _state.value = AuthState.LoggedOut(error = "Мрежен проблем: ${e.message ?: "?"}")
             }
         }
     }
@@ -87,7 +87,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
-                _state.value = AuthState.LoggedOut(error = "Mrezni problem: ${e.message ?: "?"}")
+                _state.value = AuthState.LoggedOut(error = "Мрежен проблем: ${e.message ?: "?"}")
             }
         }
     }

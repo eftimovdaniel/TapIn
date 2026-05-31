@@ -1,5 +1,6 @@
 package com.tapin.student.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -7,25 +8,37 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tapin.student.data.api.UserView
+import com.tapin.student.nfc.TapInHceService
 import com.tapin.student.ui.Danger
 import com.tapin.student.ui.Ink
 import com.tapin.student.ui.Ink10
@@ -33,6 +46,8 @@ import com.tapin.student.ui.Ink40
 import com.tapin.student.ui.Ink60
 import com.tapin.student.ui.Paper
 import com.tapin.student.ui.Success
+import com.tapin.student.util.TapFeedback
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,65 +58,120 @@ fun HomeScreen(
     onLogout: () -> Unit,
 ) {
     val nfcOk = nfcSupported && nfcEnabled
+    val ctx = LocalContext.current
+    var showSuccess by remember { mutableStateOf(false) }
+
+    // Slushaj uspeshni HCE tap-i emitirani od TapInHceService
+    LaunchedEffect(Unit) {
+        TapInHceService.tapEvents.collect {
+            TapFeedback.success(ctx)
+            showSuccess = true
+            delay(2500)
+            showSuccess = false
+        }
+    }
 
     Scaffold(
         containerColor = Paper,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text("TapIn — Student",
+                    Text("TapIn — Студент",
                          style = MaterialTheme.typography.titleMedium, color = Ink)
                 },
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.Outlined.Logout, contentDescription = "Odjavi se", tint = Ink)
+                        Icon(Icons.Outlined.Logout, contentDescription = "Одјави се", tint = Ink)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Paper)
             )
         }
     ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            Column(
+                Modifier.fillMaxSize().padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                UserCard(user)
+
+                Spacer(Modifier.weight(1f))
+
+                NfcRing(active = nfcOk)
+
+                Text(
+                    when {
+                        !nfcSupported -> "Телефонот не поддржува NFC"
+                        !nfcEnabled -> "NFC е исклучен"
+                        else -> "Подготвен за тап"
+                    },
+                    color = when {
+                        !nfcOk -> Danger
+                        else -> Ink
+                    },
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                )
+
+                Text(
+                    when {
+                        !nfcSupported -> "Присуството мора рачно да се запише."
+                        !nfcEnabled -> "Вклучи NFC од поставките."
+                        else -> "Допри ја задната страна на професоровиот телефон."
+                    },
+                    color = Ink40,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                )
+
+                Spacer(Modifier.weight(1f))
+
+                HceHint()
+
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Full-screen overlay koga uspeshno e ispraten potpis
+            AnimatedVisibility(
+                visible = showSuccess,
+                enter = fadeIn() + scaleIn(initialScale = 0.85f),
+                exit = fadeOut() + scaleOut(targetScale = 0.9f),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                SuccessOverlay()
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuccessOverlay() {
+    Box(
+        Modifier.fillMaxSize().background(Success.copy(alpha = 0.96f)),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
-            Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            UserCard(user)
-
-            Spacer(Modifier.weight(1f))
-
-            NfcRing(active = nfcOk)
-
+            Icon(
+                Icons.Outlined.CheckCircle,
+                contentDescription = null,
+                tint = Paper,
+                modifier = Modifier.size(140.dp)
+            )
             Text(
-                when {
-                    !nfcSupported -> "Telefonot ne podderzhuva NFC"
-                    !nfcEnabled -> "NFC e isklucen"
-                    else -> "Spremen za tap"
-                },
-                color = when {
-                    !nfcOk -> Danger
-                    else -> Ink
-                },
-                style = MaterialTheme.typography.headlineMedium,
+                "Запишано!",
+                color = Paper,
+                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Text(
+                "Присуството е успешно регистрирано",
+                color = Paper.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
             )
-
-            Text(
-                when {
-                    !nfcSupported -> "Atendansata mora rachno da se zapishe."
-                    !nfcEnabled -> "Vklji NFC od poshtenstvenoto meni."
-                    else -> "Dopri zadnata strana na profesoroviot telefon."
-                },
-                color = Ink40,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(Modifier.weight(1f))
-
-            HceHint()
-
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -114,13 +184,13 @@ private fun UserCard(user: UserView) {
             Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text("STUDENT", style = MaterialTheme.typography.labelSmall, color = Ink40)
+            Text("СТУДЕНТ", style = MaterialTheme.typography.labelSmall, color = Ink40)
             Text(user.fullName,
                  style = MaterialTheme.typography.headlineMedium, color = Ink)
             Text(user.email, color = Ink40,
                  style = MaterialTheme.typography.bodyMedium)
             user.studentNumber?.let {
-                Text("Broj: $it",
+                Text("Број: $it",
                      color = Ink60,
                      style = MaterialTheme.typography.bodyMedium
                          .copy(fontFamily = FontFamily.Monospace))
@@ -193,11 +263,11 @@ private fun HceHint() {
     Surface(color = Ink10, shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
-            Text("KAKO RABOTI",
+            Text("КАКО РАБОТИ",
                  color = Ink40, style = MaterialTheme.typography.labelSmall)
             Spacer(Modifier.height(4.dp))
             Text(
-                "Pri tap, telefonot prakja samo tvojot broj na student do profesoroviot telefon. Ne treba da otvorash aplikacija — raboti i koga e zaklucen.",
+                "При тап, телефонот праќа само твојот број на студент до професоровиот телефон. Не треба да отвораш апликација — работи и кога е заклучен.",
                 color = Ink60, style = MaterialTheme.typography.bodySmall
             )
         }

@@ -1,0 +1,6 @@
+# Test deps — instaliraj so:
+#   pip install -r requirements-dev.txt
+-r requirements.txt
+
+pytest>=8.3.0
+httpx>=0.27.0

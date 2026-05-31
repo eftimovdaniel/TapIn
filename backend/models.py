@@ -1,4 +1,4 @@
-"""SQLAlchemy modeli — odgovaraat na database/schema.sql."""
+"""SQLAlchemy modeli za Supabase — odgovaraat na database/schema.sql."""
 from datetime import datetime
 from enum import Enum
 
@@ -24,7 +24,7 @@ class Role(str, Enum):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(160), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(72), nullable=False)
     full_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -36,7 +36,7 @@ class User(Base):
 class Course(Base):
     __tablename__ = "courses"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     teacher_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
@@ -59,7 +59,7 @@ class Enrollment(Base):
 class AttendanceSession(Base):
     __tablename__ = "attendance_sessions"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     course_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("courses.id"), nullable=False)
     teacher_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -79,7 +79,7 @@ class Attendance(Base):
         UniqueConstraint("session_id", "student_id", name="attendance_unique_per_student"),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     session_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("attendance_sessions.id"), nullable=False)
     student_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
     tapped_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

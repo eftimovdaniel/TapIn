@@ -39,11 +39,11 @@ def create_course(
     teacher_id = user.id if user.is_teacher else (req.teacherId or user.id)
     teacher = db.get(User, teacher_id)
     if not teacher:
-        raise HTTPException(status_code=404, detail="Teacher not found")
+        raise HTTPException(status_code=404, detail="Професорот не е најден")
     if teacher.role not in ("TEACHER", "ADMIN"):
-        raise HTTPException(status_code=400, detail="User is not a teacher")
+        raise HTTPException(status_code=400, detail="Корисникот не е професор")
     if db.scalar(select(Course).where(Course.code == req.code.strip())):
-        raise HTTPException(status_code=409, detail="Course code already exists")
+        raise HTTPException(status_code=409, detail="Шифрата на предметот веќе постои")
 
     course = Course(code=req.code.strip(), name=req.name.strip(), teacher_id=teacher.id)
     db.add(course)
@@ -61,10 +61,10 @@ def enroll_student(
 ) -> None:
     course = db.get(Course, course_id)
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise HTTPException(status_code=404, detail="Предметот не е најден")
     student = db.get(User, studentId)
     if not student or student.role != "STUDENT":
-        raise HTTPException(status_code=400, detail="User is not a student")
+        raise HTTPException(status_code=400, detail="Корисникот не е студент")
 
     exists = db.get(Enrollment, (studentId, course_id))
     if exists:

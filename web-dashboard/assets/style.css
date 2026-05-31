@@ -1,69 +1,123 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
-
 :root {
+  --ink:        #0A0A0A;
+  --ink-60:     #404040;
+  --ink-40:     #737373;
+  --ink-20:     #E5E5E5;
+  --ink-10:     #F5F5F5;
+  --ink-5:      #FAFAFA;
+  --bg:         #FFFFFF;
   font-feature-settings: "ss01", "cv11";
 }
 
-/* ─────────── Tailwind component-style classes (apply via @layer is fine
-   without a build step, we just write plain CSS) ─────────── */
+html, body {
+  background-color: var(--bg);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─────────── Cards / stat tiles ─────────── */
 
 .stat-card {
-  background: #f4f4f4;
-  border-radius: 1.25rem;
-  padding: 1.1rem 1.2rem;
+  background: var(--bg);
+  border: 1px solid var(--ink-20);
+  border-radius: 12px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  transition: transform 120ms ease;
+  gap: 4px;
+  transition: border-color 120ms ease, transform 120ms ease;
 }
 .stat-card:hover {
-  transform: translateY(-1px);
+  border-color: var(--ink-40);
 }
 .stat-label {
   font-size: 11px;
-  letter-spacing: 0.16em;
-  color: #8a8a92;
+  color: var(--ink-40);
   font-weight: 500;
 }
 .stat-value {
-  font-size: 30px;
-  font-weight: 700;
+  font-family: 'Space Grotesk', 'Inter', ui-sans-serif, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  color: #0e0e0f;
+  color: var(--ink);
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #eaeaea;
-  border-radius: 1.25rem;
-  padding: 1.25rem;
+  background: var(--bg);
+  border: 1px solid var(--ink-20);
+  border-radius: 14px;
+  padding: 20px;
 }
 .card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 12px;
 }
+
+/* ─────────── Inputs ─────────── */
 
 .filter-input {
-  border: 1px solid #eaeaea;
-  border-radius: 9999px;
-  padding: 0.5rem 0.85rem;
-  font-size: 14px;
-  background: #ffffff;
-  color: #0e0e0f;
+  border: 1px solid var(--ink-20);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--ink);
   outline: none;
+  font-family: inherit;
+  transition: border-color 80ms ease, box-shadow 80ms ease;
 }
 .filter-input:focus {
-  border-color: #0e0e0f;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--ink-10);
 }
 
-/* Subtle hover for table rows */
+/* ─────────── Tables ─────────── */
+
+tbody tr {
+  transition: background-color 80ms ease;
+}
 tbody tr:hover {
-  background: #f9f9f9;
+  background: var(--ink-5);
 }
 
-/* Soft shadow when sticky header is detached */
+/* ─────────── Misc ─────────── */
+
+button {
+  font-family: inherit;
+}
+
+/* Sticky header subtle shadow on scroll */
 header.sticky {
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 0 rgba(10, 10, 10, 0.04);
+}
+
+/* ─────────── Live pulse na nov red ─────────── */
+@keyframes row-pulse {
+  0%   { background-color: rgba(48, 164, 108, 0.18); }
+  100% { background-color: transparent; }
+}
+tbody tr.row-pulse {
+  animation: row-pulse 2200ms ease-out;
+}
+
+/* ─────────── Responsive — mobil ───────────
+   Tailwind klasata `grid-cols-2` na stat-карди gi dr5i во 2 kolони
+   na mobil; ovde pravime tipografski adapteр+ shrink na zaglавija.    */
+@media (max-width: 640px) {
+  .stat-value { font-size: 22px; }
+  .card       { padding: 14px; border-radius: 12px; }
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .filter-input { font-size: 12px; padding: 7px 10px; }
+  /* Zaglavija pomalku — h1 na page-header */
+  .font-display { letter-spacing: -0.01em; }
+  table { font-size: 12px; }
+  table th, table td { padding: 8px 10px !important; }
 }

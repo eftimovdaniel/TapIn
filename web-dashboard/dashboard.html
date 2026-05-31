@@ -3,7 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TapIn — Dashboard</title>
+    <title>TapIn — Контролна табла</title>
+    <link rel="icon" type="image/png" href="./assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="./assets/style.css" />
@@ -12,75 +16,74 @@
         theme: {
           extend: {
             colors: {
-              ink: { DEFAULT: "#0E0E0F", 80: "#1B1B1D", 60: "#3F3F44", 40: "#8A8A92", 20: "#EAEAEA", 10: "#F4F4F4" },
-              paper: "#FFFFFF",
-              danger: "#B0463A",
-              success: "#1F7A53",
+              ink: { DEFAULT: "#0A0A0A", 80: "#171717", 60: "#404040", 40: "#737373", 20: "#E5E5E5", 10: "#F5F5F5", 5: "#FAFAFA" },
+              accent: "#0A0A0A",
+              danger: "#E5484D",
+              success: "#30A46C",
             },
             fontFamily: {
               sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-              mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+              display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'sans-serif'],
             },
-            borderRadius: { '2xl': '1.25rem', '3xl': '1.75rem' },
           },
         },
       };
     </script>
   </head>
-  <body class="min-h-screen bg-paper text-ink antialiased font-sans">
-    <!-- Top bar -->
-    <header class="sticky top-0 z-10 border-b border-ink-20 bg-paper/85 backdrop-blur">
-      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+  <body class="min-h-screen bg-white text-ink antialiased font-sans">
+    <header class="sticky top-0 z-10 border-b border-ink-20 bg-white/85 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <div class="flex items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-ink text-paper">
-            <span class="font-bold tracking-tight">T</span>
-          </div>
-          <div>
-            <div class="text-[11px] tracking-[0.16em] text-ink-40">TAPIN</div>
-            <h1 class="-mt-0.5 text-base font-semibold">Dashboard</h1>
-          </div>
+          <img src="./assets/logo.png" alt="TapIn" class="h-12 w-auto object-contain" />
+          <span class="hidden text-xs text-ink-40 md:inline">Контролна табла</span>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
           <div class="hidden text-right md:block">
-            <div class="text-[11px] tracking-[0.16em] text-ink-40">PROFESOR</div>
-            <div id="userName" class="text-sm font-medium">—</div>
+            <div id="userName" class="text-sm font-medium leading-tight">—</div>
+            <div class="text-[11px] leading-tight text-ink-40">Професор</div>
           </div>
           <button
             id="logout"
-            class="rounded-full border border-ink-20 px-4 py-2 text-sm font-medium hover:bg-ink-10"
+            class="rounded-lg border border-ink-20 px-3 py-1.5 text-xs font-medium hover:bg-ink-10"
           >
-            Odjavi se
+            Одјави се
           </button>
         </div>
       </div>
     </header>
 
-    <main class="mx-auto max-w-6xl space-y-6 px-6 py-8">
-      <!-- Stats cards -->
+    <main class="mx-auto max-w-6xl space-y-8 px-6 py-8">
+      <!-- Page header -->
+      <div>
+        <h1 class="font-display text-2xl font-bold tracking-tight">Преглед</h1>
+        <p class="mt-1 text-sm text-ink-40">Статистики и евиденција на присуство во реално време.</p>
+      </div>
+
+      <!-- Stat cards -->
       <section class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <div class="stat-card">
-          <div class="stat-label">Denes</div>
+          <div class="stat-label">Денес</div>
           <div id="statToday" class="stat-value">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Nedela</div>
+          <div class="stat-label">Недела</div>
           <div id="statWeek" class="stat-value">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Mesec</div>
+          <div class="stat-label">Месец</div>
           <div id="statMonth" class="stat-value">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Aktivni sesii</div>
+          <div class="stat-label">Активни сесии</div>
           <div id="statActive" class="stat-value">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Studenti</div>
+          <div class="stat-label">Студенти</div>
           <div id="statStudents" class="stat-value">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Predmeti</div>
+          <div class="stat-label">Предмети</div>
           <div id="statCourses" class="stat-value">—</div>
         </div>
       </section>
@@ -90,17 +93,17 @@
         <div class="card lg:col-span-3">
           <div class="card-header">
             <div>
-              <div class="stat-label">TREND</div>
-              <h2 class="text-xl font-semibold">Atendansa po denovi</h2>
+              <h2 class="font-display text-base font-semibold">Тренд на присуство</h2>
+              <p class="mt-0.5 text-xs text-ink-40">Тапови по денови.</p>
             </div>
-            <select id="trendDays" class="rounded-full border border-ink-20 bg-paper px-3 py-1.5 text-sm">
-              <option value="7">7 dena</option>
-              <option value="14">14 dena</option>
-              <option value="30" selected>30 dena</option>
-              <option value="90">90 dena</option>
+            <select id="trendDays" class="filter-input">
+              <option value="7">7 дена</option>
+              <option value="14">14 дена</option>
+              <option value="30" selected>30 дена</option>
+              <option value="90">90 дена</option>
             </select>
           </div>
-          <div class="mt-4 h-64">
+          <div class="mt-5 h-64">
             <canvas id="trendChart"></canvas>
           </div>
         </div>
@@ -108,13 +111,42 @@
         <div class="card lg:col-span-2">
           <div class="card-header">
             <div>
-              <div class="stat-label">PO PREDMET</div>
-              <h2 class="text-xl font-semibold">Stapka na atendansa</h2>
+              <h2 class="font-display text-base font-semibold">Стапка по предмет</h2>
+              <p class="mt-0.5 text-xs text-ink-40">Релативна успешност.</p>
             </div>
           </div>
-          <div class="mt-4 h-64">
+          <div class="mt-5 h-64">
             <canvas id="courseChart"></canvas>
           </div>
+        </div>
+      </section>
+
+      <!-- Per-student attendance rate -->
+      <section class="card">
+        <div class="card-header flex-wrap gap-3">
+          <div>
+            <h2 class="font-display text-base font-semibold">Стапка по студент</h2>
+            <p class="mt-0.5 text-xs text-ink-40">Процент на сесии на кои студентот тапнал присуство.</p>
+          </div>
+          <select id="studentCourseFilter" class="filter-input">
+            <option value="">Сите предмети</option>
+          </select>
+        </div>
+        <div class="mt-5 overflow-x-auto">
+          <table class="min-w-full divide-y divide-ink-20 text-sm">
+            <thead>
+              <tr class="text-left text-xs font-medium text-ink-40">
+                <th class="px-3 py-2.5">Студент</th>
+                <th class="px-3 py-2.5">Број</th>
+                <th class="px-3 py-2.5 text-right">Присуства</th>
+                <th class="px-3 py-2.5 text-right">Од сесии</th>
+                <th class="px-3 py-2.5">Стапка</th>
+              </tr>
+            </thead>
+            <tbody id="studentTbody" class="divide-y divide-ink-10">
+              <tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Вчитување…</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -122,44 +154,44 @@
       <section class="card">
         <div class="card-header flex-wrap gap-3">
           <div>
-            <div class="stat-label">EVIDENCIJA</div>
-            <h2 class="text-xl font-semibold">Atendansi</h2>
+            <h2 class="font-display text-base font-semibold">Евиденција</h2>
+            <p class="mt-0.5 text-xs text-ink-40">Сите присуства, сортирани од најновите.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <select id="filterCourse" class="filter-input">
-              <option value="">Site predmeti</option>
+              <option value="">Сите предмети</option>
             </select>
             <input id="filterFrom" type="date" class="filter-input" />
             <input id="filterTo" type="date" class="filter-input" />
-            <input id="filterSearch" type="text" placeholder="Pretraga (ime / broj)" class="filter-input" />
-            <button id="exportCsv" class="rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink-80">
-              Izvezi CSV
+            <input id="filterSearch" type="text" placeholder="Пребарај" class="filter-input w-44" />
+            <button id="exportCsv" class="rounded-lg bg-ink px-3 py-2 text-xs font-medium text-white hover:bg-ink-80">
+              Извези CSV
             </button>
           </div>
         </div>
 
-        <div class="mt-4 overflow-x-auto">
+        <div class="mt-5 overflow-x-auto">
           <table class="min-w-full divide-y divide-ink-20 text-sm">
             <thead>
-              <tr class="text-left text-[11px] tracking-[0.16em] text-ink-40">
-                <th class="px-3 py-3">VREME</th>
-                <th class="px-3 py-3">STUDENT</th>
-                <th class="px-3 py-3">BROJ</th>
-                <th class="px-3 py-3">PREDMET</th>
-                <th class="px-3 py-3">PROFESOR</th>
+              <tr class="text-left text-xs font-medium text-ink-40">
+                <th class="px-3 py-2.5">Време</th>
+                <th class="px-3 py-2.5">Студент</th>
+                <th class="px-3 py-2.5">Број</th>
+                <th class="px-3 py-2.5">Предмет</th>
+                <th class="px-3 py-2.5">Професор</th>
               </tr>
             </thead>
             <tbody id="tbody" class="divide-y divide-ink-10">
-              <tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Vchituvanje…</td></tr>
+              <tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Вчитување…</td></tr>
             </tbody>
           </table>
         </div>
 
-        <div class="mt-4 flex items-center justify-between text-sm text-ink-40">
+        <div class="mt-4 flex items-center justify-between text-xs text-ink-40">
           <div id="pageInfo">—</div>
           <div class="flex gap-2">
-            <button id="prevPage" class="rounded-full border border-ink-20 px-4 py-1.5 hover:bg-ink-10 disabled:opacity-40" disabled>‹ Prethodno</button>
-            <button id="nextPage" class="rounded-full border border-ink-20 px-4 py-1.5 hover:bg-ink-10 disabled:opacity-40" disabled>Sledno ›</button>
+            <button id="prevPage" class="rounded-lg border border-ink-20 px-3 py-1.5 hover:bg-ink-10 disabled:opacity-40" disabled>‹ Претходно</button>
+            <button id="nextPage" class="rounded-lg border border-ink-20 px-3 py-1.5 hover:bg-ink-10 disabled:opacity-40" disabled>Следно ›</button>
           </div>
         </div>
       </section>

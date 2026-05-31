@@ -69,8 +69,8 @@ function drawTrend(points, days) {
   if (trendChart) trendChart.destroy();
   const ctx = document.getElementById("trendChart").getContext("2d");
   const grad = ctx.createLinearGradient(0, 0, 0, 240);
-  grad.addColorStop(0, "rgba(14,14,15,0.18)");
-  grad.addColorStop(1, "rgba(14,14,15,0)");
+  grad.addColorStop(0, "rgba(10,10,10,0.12)");
+  grad.addColorStop(1, "rgba(10,10,10,0)");
 
   trendChart = new Chart(ctx, {
     type: "line",
@@ -78,13 +78,13 @@ function drawTrend(points, days) {
       labels,
       datasets: [{
         data: values,
-        borderColor: "#0E0E0F",
+        borderColor: "#0A0A0A",
         backgroundColor: grad,
-        borderWidth: 2,
-        tension: 0.35,
+        borderWidth: 1.5,
+        tension: 0.4,
         pointRadius: 0,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: "#0E0E0F",
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: "#0A0A0A",
         pointHoverBorderColor: "#fff",
         pointHoverBorderWidth: 2,
         fill: true,
@@ -95,11 +95,11 @@ function drawTrend(points, days) {
       plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } },
       interaction: { mode: "index", intersect: false },
       scales: {
-        x: { ticks: { maxTicksLimit: 8, color: "#8A8A92" }, grid: { display: false } },
+        x: { ticks: { maxTicksLimit: 8, color: "#737373", font: { family: 'Inter, sans-serif', size: 11 } }, grid: { display: false } },
         y: {
           beginAtZero: true,
-          ticks: { precision: 0, color: "#8A8A92" },
-          grid: { color: "#EAEAEA", drawBorder: false },
+          ticks: { precision: 0, color: "#737373", font: { family: 'Inter, sans-serif', size: 11 } },
+          grid: { color: "#F5F5F5", drawBorder: false },
         },
       },
     },
@@ -118,9 +118,9 @@ function drawPerCourse(items) {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: "#0E0E0F",
-        borderRadius: 6,
-        barThickness: 18,
+        backgroundColor: "#0A0A0A",
+        borderRadius: 4,
+        barThickness: 14,
       }],
     },
     options: {
@@ -133,11 +133,11 @@ function drawPerCourse(items) {
       scales: {
         x: {
           beginAtZero: true, max: 100,
-          ticks: { color: "#8A8A92", callback: (v) => v + "%" },
-          grid: { color: "#EAEAEA", drawBorder: false },
+          ticks: { color: "#737373", font: { family: 'Inter, sans-serif', size: 11 }, callback: (v) => v + "%" },
+          grid: { color: "#F5F5F5", drawBorder: false },
         },
         y: {
-          ticks: { color: "#3F3F44" },
+          ticks: { color: "#404040", font: { family: 'Inter, sans-serif', size: 12 } },
           grid: { display: false },
         },
       },
@@ -209,7 +209,7 @@ function renderTable() {
     : tableState.items;
 
   if (items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Nema podatoci.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Нема податоци.</td></tr>`;
   } else {
     tbody.innerHTML = items
       .map(
@@ -226,13 +226,13 @@ function renderTable() {
   }
 
   const totalPages = Math.max(1, Math.ceil(tableState.total / tableState.size));
-  pageInfo.textContent = `Strana ${tableState.page + 1} od ${totalPages} · vkupno ${fmtNum(tableState.total)}`;
+  pageInfo.textContent = `Страна ${tableState.page + 1} од ${totalPages} · вкупно ${fmtNum(tableState.total)}`;
   prevBtn.disabled = tableState.page <= 0;
   nextBtn.disabled = tableState.page + 1 >= totalPages;
 }
 
 async function loadAttendance() {
-  tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Vchituvanje…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Вчитување…</td></tr>`;
   try {
     const f = readFilters();
     const data = await api.listAttendance({
@@ -246,7 +246,7 @@ async function loadAttendance() {
     tableState.items = data.items ?? [];
     renderTable();
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-danger">${escapeHtml(e.message || "Greshka")}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-danger">${escapeHtml(e.message || "Грешка")}</td></tr>`;
   }
 }
 
@@ -291,7 +291,7 @@ document.getElementById("exportCsv").addEventListener("click", async () => {
     });
 
     const rows = [
-      ["Vreme", "Student", "Broj", "Predmet", "Profesor"],
+      ["Време", "Студент", "Број", "Предмет", "Професор"],
       ...(all.items || []).map((a) => [
         fmtDateTime(a.tappedAt),
         a.studentName,
@@ -322,14 +322,86 @@ document.getElementById("exportCsv").addEventListener("click", async () => {
     a.remove();
     URL.revokeObjectURL(url);
   } catch (e) {
-    alert("Neuspeshen izvoz: " + e.message);
+    alert("Неуспешен извоз: " + e.message);
   }
 });
 
-// ── Kick off ─────────────────────────────────────────────
-loadStatistics(30);
-loadCourses();
-loadAttendance();
+// ── Per-student attendance rate tablica ──────────────────
+const studentTbody = document.getElementById("studentTbody");
+const studentCourseFilter = document.getElementById("studentCourseFilter");
 
-// Auto-refresh statistiki sekoja 30 sekundi (taa zhiva ekran)
-setInterval(() => loadStatistics(parseInt(document.getElementById("trendDays").value, 10)), 30000);
+async function loadPerStudent() {
+  studentTbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Вчитување…</td></tr>`;
+  try {
+    const courseId = studentCourseFilter.value || undefined;
+    const rows = await api.perStudent(courseId);
+    if (!rows || rows.length === 0) {
+      studentTbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-ink-40">Нема податоци.</td></tr>`;
+      return;
+    }
+    studentTbody.innerHTML = rows
+      .map((r) => {
+        const pct = Math.round((r.rate || 0) * 100);
+        const barColor = pct >= 75 ? "bg-success" : pct >= 50 ? "bg-ink-60" : "bg-danger";
+        return `
+          <tr class="text-ink">
+            <td class="px-3 py-3 font-medium">${escapeHtml(r.studentName)}</td>
+            <td class="px-3 py-3 font-mono text-xs text-ink-60">${escapeHtml(r.studentNumber || "—")}</td>
+            <td class="px-3 py-3 text-right font-mono text-xs">${fmtNum(r.attended)}</td>
+            <td class="px-3 py-3 text-right font-mono text-xs text-ink-60">${fmtNum(r.totalSessions)}</td>
+            <td class="px-3 py-3 min-w-[140px]">
+              <div class="flex items-center gap-2">
+                <div class="h-1.5 flex-1 rounded-full bg-ink-10 overflow-hidden">
+                  <div class="h-full ${barColor}" style="width:${pct}%"></div>
+                </div>
+                <span class="font-mono text-xs tabular-nums text-ink-60 min-w-[36px] text-right">${pct}%</span>
+              </div>
+            </td>
+          </tr>`;
+      })
+      .join("");
+  } catch (e) {
+    studentTbody.innerHTML = `<tr><td colspan="5" class="px-3 py-8 text-center text-danger">${escapeHtml(e.message || "Грешка")}</td></tr>`;
+  }
+}
+
+studentCourseFilter.addEventListener("change", loadPerStudent);
+
+// ── Kick off ─────────────────────────────────────────────
+async function bootstrap() {
+  await loadCourses();
+  // Klonira opciите od courseFilter vo studentCourseFilter
+  const src = document.getElementById("filterCourse");
+  studentCourseFilter.innerHTML = src.innerHTML;
+
+  loadStatistics(30);
+  loadAttendance();
+  loadPerStudent();
+}
+bootstrap();
+
+// ── Live polling — auto-refresh статистики + tabeли ──────
+let lastTotal = 0;
+async function liveRefresh() {
+  loadStatistics(parseInt(document.getElementById("trendDays").value, 10));
+  loadPerStudent();
+  // Detekcija на nov tap → osveжи tabela so vizuelen pulse
+  try {
+    const head = await api.listAttendance({ page: 0, size: 1 });
+    const total = head.totalElements || 0;
+    if (total > lastTotal && lastTotal > 0) {
+      // ima nov zapis — osveжи + indikatorот
+      await loadAttendance();
+      pulseFirstRow();
+    }
+    lastTotal = total;
+  } catch { /* offline ok */ }
+}
+setInterval(liveRefresh, 15000);
+
+function pulseFirstRow() {
+  const first = tbody.querySelector("tr");
+  if (!first) return;
+  first.classList.add("row-pulse");
+  setTimeout(() => first.classList.remove("row-pulse"), 2200);
+}

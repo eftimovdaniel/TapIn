@@ -30,18 +30,18 @@ def _to_auth_response(user: User) -> AuthResponse:
 @router.post("/api/auth/register", response_model=AuthResponse, status_code=201, include_in_schema=False)
 def register(req: RegisterRequest, db: Session = Depends(get_db)) -> AuthResponse:
     if req.role == "ADMIN":
-        raise HTTPException(status_code=400, detail="Cannot register as admin")
+        raise HTTPException(status_code=400, detail="Не може да се регистрираш како админ")
 
     if db.scalar(select(User).where(User.email == req.email.lower())):
-        raise HTTPException(status_code=409, detail="Email already registered")
+        raise HTTPException(status_code=409, detail="Е-поштата е веќе регистрирана")
 
     if req.role == "STUDENT":
         if not req.studentNumber or not req.studentNumber.strip():
-            raise HTTPException(status_code=400, detail="Student number is required for students")
+            raise HTTPException(status_code=400, detail="Бројот на студент е задолжителен за студенти")
         if db.scalar(select(User).where(User.student_number == req.studentNumber.strip())):
-            raise HTTPException(status_code=409, detail="Student number already registered")
+            raise HTTPException(status_code=409, detail="Бројот на студент е веќе регистриран")
     elif req.studentNumber:
-        raise HTTPException(status_code=400, detail="Student number is only for students")
+        raise HTTPException(status_code=400, detail="Бројот на студент е само за студенти")
 
     user = User(
         email=req.email.lower().strip(),
@@ -63,7 +63,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
     user = db.scalar(select(User).where(User.email == req.email.lower()))
     if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Неточна е-пошта или лозинка"
         )
     return _to_auth_response(user)
 
@@ -72,7 +72,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
 def me(user: CurrentUser = Depends(current_user), db: Session = Depends(get_db)) -> UserView:
     db_user = db.get(User, user.id)
     if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Корисникот не е најден")
     return UserView.from_orm_user(db_user)
 
 
@@ -89,5 +89,5 @@ def find_by_student_number(
         select(User).where(User.student_number == student_number.strip(), User.role == "STUDENT")
     )
     if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+        raise HTTPException(status_code=404, detail="Студентот не е најден")
     return UserView.from_orm_user(student)

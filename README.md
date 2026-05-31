@@ -20,6 +20,8 @@ Mobilniaplikacii-grupna/
 - [x] Teacher Android app — Auth + Predmeti + Sesija + NFC reader
 - [x] Student Android app — Auth + HCE (Host Card Emulation)
 - [x] Web dashboard — login, stats kartichki, grafikoni, tabela so filteri, CSV izvoz
+- [x] **36 backend testovi** (pytest + httpx, in-memory SQLite)
+- [x] **Docker compose** — backend + dashboard (+ optional lokalna Postgres)
 
 ## Tech stack
 
@@ -109,3 +111,43 @@ Login so postoechki teacher akaunt (npr. `prof.fastapi@finki.mk` / `test12345`).
 | GET | `/api/attendance` | Lista (filteri: studentId, courseId, sessionId, from, to) |
 | GET | `/api/statistics` | Agregat (overview + per-course + trend) |
 | GET | `/api/users/by-number/{n}` | Lookup za NFC tap |
+
+## Testiranje
+
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest
+```
+
+Pokriva: register/login/me, courses CRUD, sessions, attendance sync + filter +
+pagination, statistics (overview/per-course/trend), 401/403/404/409 ednoznachnost.
+
+```
+36 passed in 1.97s
+```
+
+Testovite koristat in-memory SQLite — ne ti treba Supabase za da gi pokrenesh.
+
+## Docker (eden komand za celiot stack)
+
+**Default — koristi Supabase** (popolni `backend/.env` prvo):
+
+```bash
+docker compose up --build
+```
+
+- Backend: <http://localhost:8080> (Swagger: `/docs`)
+- Dashboard: <http://localhost:8000> (nginx proksira `/api/*` do backend)
+
+**So lokalna Postgres** (bez Supabase, kontejnerizirana baza):
+
+```bash
+docker compose --profile local-db up --build
+```
+
+Postgres se inicijalizira avtomatski so `database/schema.sql`.
+Vo `backend/.env` postavi `DATABASE_URL=postgresql+psycopg://tapin:tapin_dev@postgres:5432/tapin`.
+
+Stop: `docker compose down`. Vo cista sostojba: `docker compose down -v`.

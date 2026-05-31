@@ -87,7 +87,15 @@ class SessionView(BaseModel):
 
 
 class TapRecord(BaseModel):
-    studentId: int
+    """Eden NFC tap.
+
+    Eden od `studentId` ili `signedPayload` mora da postoi:
+      - studentId: directно (legacy / manuelnoto vnesuvanje preku lookup-by-number)
+      - signedPayload: HMAC-potpishan string od HCE servisot — backend
+        sam ke go validira i resolvira do studentId.
+    """
+    studentId: int | None = None
+    signedPayload: str | None = None
     tappedAt: datetime | None = None
 
 
@@ -100,6 +108,7 @@ class BulkAttendanceResponse(BaseModel):
     accepted: int
     duplicates: int
     rejected: int
+    invalidSignatures: int = 0
     ids: list[int]
 
 
@@ -150,3 +159,13 @@ class StatisticsAggregate(BaseModel):
     overview: Overview
     perCourse: list[CourseStat]
     trend: list[TrendPoint]
+
+
+class StudentStat(BaseModel):
+    """Stapka na prisustvo za eden student."""
+    studentId: int
+    studentName: str
+    studentNumber: str | None
+    attended: int          # broj na sesии vo koi tapnal
+    totalSessions: int     # vkupno sесии (na predметот / na profesorot)
+    rate: float            # attended / totalSessions (0.0 — 1.0)

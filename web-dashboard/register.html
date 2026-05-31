@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TapIn — Најави се</title>
+    <title>TapIn — Регистрација</title>
     <link rel="icon" type="image/png" href="./assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,23 +31,32 @@
   </head>
   <body class="min-h-screen bg-white text-ink antialiased font-sans">
     <main class="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-6 py-10">
-      <!-- Logo -->
-      <div class="mb-10 flex justify-center">
-        <img src="./assets/logo.png" alt="TapIn" class="h-32 w-auto object-contain" />
+      <div class="mb-8 flex justify-center">
+        <img src="./assets/logo.png" alt="TapIn" class="h-28 w-auto object-contain" />
       </div>
 
-      <!-- Heading -->
       <div class="mb-8 text-center">
-        <h1 class="font-display text-xl font-medium tracking-tight">Најави се</h1>
+        <h1 class="font-display text-xl font-medium tracking-tight">Регистрирај се</h1>
         <p class="mt-1.5 text-xs text-ink-40">
-          Преглед на присуство, статистики и извози.
+          Професорски профил за пристап кон контролната табла.
         </p>
       </div>
 
-      <!-- Form -->
-      <form id="loginForm" class="space-y-4">
+      <form id="registerForm" class="space-y-4">
         <div>
-          <label for="email" class="mb-1.5 block text-xs font-medium text-ink-60">Е-пошта</label>
+          <label class="mb-1.5 block text-xs font-medium text-ink-60">Име и презиме</label>
+          <input
+            id="fullName"
+            type="text"
+            required
+            minlength="2"
+            class="w-full rounded-lg border border-ink-20 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-40 focus:border-ink focus:ring-2 focus:ring-ink-10 focus:outline-none"
+            placeholder="Име Презиме"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-ink-60">Е-пошта</label>
           <input
             id="email"
             type="email"
@@ -59,13 +68,15 @@
         </div>
 
         <div>
-          <label for="password" class="mb-1.5 block text-xs font-medium text-ink-60">Лозинка</label>
+          <label class="mb-1.5 block text-xs font-medium text-ink-60">Лозинка</label>
           <input
             id="password"
             type="password"
             required
-            autocomplete="current-password"
-            class="w-full rounded-lg border border-ink-20 bg-white px-3.5 py-2.5 text-sm text-ink focus:border-ink focus:ring-2 focus:ring-ink-10 focus:outline-none"
+            minlength="6"
+            autocomplete="new-password"
+            class="w-full rounded-lg border border-ink-20 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-40 focus:border-ink focus:ring-2 focus:ring-ink-10 focus:outline-none"
+            placeholder="Мин. 6 знаци"
           />
         </div>
 
@@ -76,17 +87,17 @@
           type="submit"
           class="flex h-11 w-full items-center justify-center rounded-lg bg-ink text-sm font-medium text-white transition hover:bg-ink-80 active:scale-[0.99] disabled:opacity-60"
         >
-          <span id="submitLabel">Најави се</span>
+          <span id="submitLabel">Регистрирај се</span>
           <span id="submitSpinner" class="hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
         </button>
       </form>
 
       <p class="mt-8 text-center text-xs text-ink-40">
-        Немаш профил?
-        <a href="./register.html" class="font-medium text-ink underline-offset-4 hover:underline">Регистрирај се</a>
+        Имаш профил?
+        <a href="./index.html" class="font-medium text-ink underline-offset-4 hover:underline">Најави се</a>
       </p>
     </main>
 
-    <script type="module" src="./assets/login.js"></script>
+    <script type="module" src="./assets/register.js"></script>
   </body>
 </html>

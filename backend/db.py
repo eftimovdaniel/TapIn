@@ -1,4 +1,4 @@
-"""SQLAlchemy engine + session factory."""
+"""SQLAlchemy engine + session factory za Supabase (PostgreSQL)."""
 from collections.abc import Generator
 
 from sqlalchemy import create_engine

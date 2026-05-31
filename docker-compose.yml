@@ -1,0 +1,75 @@
+# TapIn — celiot stack so eden komand.
+#
+# Default (Supabase):
+#   1. Kopiraj backend/.env.example vo backend/.env i popolni DATABASE_URL
+#   2. docker-compose up --build
+#   → Backend na http://localhost:8080
+#   → Web na     http://localhost:8000
+#
+# Lokalna Postgres (bez Supabase):
+#   docker-compose --profile local-db up --build
+#   (zema DATABASE_URL od .env.docker, koj kazhuva na "postgres" service)
+
+services:
+  backend:
+    build: ./backend
+    container_name: tapin-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    networks:
+      - tapin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+
+  web:
+    build: ./web-dashboard
+    container_name: tapin-web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    networks:
+      - tapin
+    depends_on:
+      - backend
+
+  # Lokalna PostgreSQL — vklucena samo so `--profile local-db`.
+  # Standard: koristi se Supabase (DATABASE_URL od .env).
+  postgres:
+    image: postgres:16-alpine
+    container_name: tapin-postgres
+    restart: unless-stopped
+    profiles: ["local-db"]
+    environment:
+      POSTGRES_USER: tapin
+      POSTGRES_PASSWORD: tapin_dev
+      POSTGRES_DB: tapin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - tapin
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tapin -d tapin"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+networks:
+  tapin:
+    driver: bridge
+
+volumes:
+  postgres_data:

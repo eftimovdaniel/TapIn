@@ -53,14 +53,18 @@ uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 - **SQLAlchemy 2.0** — ORM
 - **psycopg 3** — PostgreSQL driver
 - **Pydantic 2** — validacija na request body
-- **passlib + bcrypt** — password hashing (kako shto bara spec)
-- **python-jose** — JWT (kako shto bara spec)
+- **bcrypt** — password hashing
+- **python-jose** — JWT
+- **pytest + httpx** — testovi (in-memory SQLite)
 
 ## Folder struktura
 
 ```
 backend/
 ├── requirements.txt
+├── requirements-dev.txt ← + pytest, httpx
+├── pytest.ini
+├── Dockerfile           ← multi-stage Python 3.12 slim
 ├── .env                 ← Supabase password (skrieno od git)
 ├── main.py              ← FastAPI app + CORS + health
 ├── config.py            ← Settings (chita .env)
@@ -69,12 +73,46 @@ backend/
 ├── schemas.py           ← Pydantic DTOs
 ├── security.py          ← BCrypt + JWT
 ├── deps.py              ← Auth dependency (Bearer token)
-└── routers/
-    ├── auth.py
-    ├── courses.py
-    ├── sessions.py
-    ├── attendance.py
-    └── statistics.py
+├── routers/
+│   ├── auth.py
+│   ├── courses.py
+│   ├── sessions.py
+│   ├── attendance.py
+│   └── statistics.py
+└── tests/
+    ├── conftest.py            ← in-memory SQLite + fixtures
+    ├── test_health.py
+    ├── test_auth.py           ← 14 testovi
+    ├── test_courses.py        ← 5 testovi
+    ├── test_attendance_flow.py ← 10 testovi
+    └── test_statistics.py     ← 5 testovi
+```
+
+## Testovi
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+```
+36 passed in 1.97s
+```
+
+Testovite koristat **in-memory SQLite** preku `dependency_overrides`, taka shto:
+- ne ti treba Supabase
+- sekoj test pochnuva so prazna baza (avtoclean fixture)
+- ramen rok < 2 s za site 36 testovi
+
+## Docker
+
+```bash
+# Build samo backend (od backend/ folder)
+docker build -t tapin-backend .
+docker run --rm -p 8080:8080 --env-file .env tapin-backend
+
+# Ili zaedno so dashboard preku compose (od korenot)
+cd .. && docker compose up --build
 ```
 
 ## Test (curl)

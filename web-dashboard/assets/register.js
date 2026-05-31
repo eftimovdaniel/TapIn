@@ -4,7 +4,8 @@ if (auth.isLoggedIn()) {
   location.href = "./dashboard.html";
 }
 
-const form = document.getElementById("loginForm");
+const form = document.getElementById("registerForm");
+const fullNameEl = document.getElementById("fullName");
 const emailEl = document.getElementById("email");
 const passwordEl = document.getElementById("password");
 const errorEl = document.getElementById("error");
@@ -22,6 +23,7 @@ function clearError() {
 }
 function setBusy(busy) {
   submitEl.disabled = busy;
+  fullNameEl.disabled = busy;
   emailEl.disabled = busy;
   passwordEl.disabled = busy;
   labelEl.classList.toggle("hidden", busy);
@@ -33,15 +35,16 @@ form.addEventListener("submit", async (e) => {
   clearError();
   setBusy(true);
   try {
-    const resp = await api.login(emailEl.value.trim(), passwordEl.value);
-    if (!resp.user || !["TEACHER", "ADMIN"].includes(resp.user.role)) {
-      showError("Оваа страница е само за професори.");
-      return;
-    }
+    const resp = await api.register({
+      fullName: fullNameEl.value.trim(),
+      email: emailEl.value.trim(),
+      password: passwordEl.value,
+      role: "TEACHER",
+    });
     auth.saveSession(resp.token, resp.user);
     location.href = "./dashboard.html";
   } catch (err) {
-    showError(err.message || "Неуспешна најава");
+    showError(err.message || "Неуспешна регистрација");
   } finally {
     setBusy(false);
   }

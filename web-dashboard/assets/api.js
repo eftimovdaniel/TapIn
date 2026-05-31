@@ -1,8 +1,24 @@
 /**
  * Tenok API klient — wrapper okolu fetch.
  * Site povici prefiksiraat so BASE_URL i automatski dodavaat Bearer token.
+ *
+ * BASE_URL prioritet:
+ *   1. window.__TAPIN_API_BASE__   (runtime override, npr. preku <script>)
+ *   2. "" — koga dashboard-ot se servira preku nginx koj proxy-ja /api/* (Docker)
+ *   3. "http://localhost:8080"     (dev: dashboard na :8000, backend na :8080)
  */
-export const BASE_URL = "http://localhost:8080";
+function detectBaseUrl() {
+  if (typeof window !== "undefined" && window.__TAPIN_API_BASE__) {
+    return window.__TAPIN_API_BASE__;
+  }
+  // Vo Docker dashboard-ot se servira na port 80 — nginx-ot proksira /api/*
+  if (typeof location !== "undefined" && (location.port === "" || location.port === "80")) {
+    return "";
+  }
+  return "http://localhost:8080";
+}
+
+export const BASE_URL = detectBaseUrl();
 
 const TOKEN_KEY = "tapin.token";
 const USER_KEY = "tapin.user";
@@ -61,7 +77,7 @@ async function call(path, { method = "GET", body, query } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (e) {
-    throw new ApiError(0, "Mrezhna greshka: " + (e.message || "?"));
+    throw new ApiError(0, "Мрежна грешка: " + (e.message || "?"));
   }
 
   if (resp.status === 401) {
@@ -69,7 +85,7 @@ async function call(path, { method = "GET", body, query } = {}) {
     if (!location.pathname.endsWith("index.html") && location.pathname !== "/") {
       location.href = "./index.html";
     }
-    throw new ApiError(401, "Sesija e isteche. Najavi se povtorno.");
+    throw new ApiError(401, "Сесијата истече. Најави се повторно.");
   }
 
   if (!resp.ok) {
@@ -91,10 +107,12 @@ async function call(path, { method = "GET", body, query } = {}) {
 export const api = {
   // Auth
   login: (email, password) => call("/api/login", { method: "POST", body: { email, password } }),
+  register: (body) => call("/api/register", { method: "POST", body }),
   me: () => call("/api/auth/me"),
 
   // Statistics
   statistics: (days = 30) => call("/api/statistics", { query: { days } }),
+  perStudent: (courseId) => call("/api/statistics/per-student", { query: { courseId } }),
 
   // Attendance
   listAttendance: ({ courseId, sessionId, from, to, page = 0, size = 20 } = {}) =>

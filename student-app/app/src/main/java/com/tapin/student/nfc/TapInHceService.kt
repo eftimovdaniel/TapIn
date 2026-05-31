@@ -3,6 +3,10 @@ package com.tapin.student.nfc
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 /**
  * Card-emulation service for TapIn.
@@ -19,6 +23,11 @@ import android.util.Log
  *
  * The teacher app's NfcReader strips the trailing 9000 and treats the
  * remaining bytes as UTF-8 text → that becomes the student number.
+ *
+ * --- UI feedback ---
+ *   Sekoj uspesh tap se emitira na [tapEvents] SharedFlow,
+ *   za UI-ot da pokaze "Запишано!" pri slednoto обновуvanje na ekranot
+ *   (HCE servisot raboti i koga aplikacijaata ne e otvorena).
  */
 class TapInHceService : HostApduService() {
 
@@ -41,8 +50,15 @@ class TapInHceService : HostApduService() {
             return STATUS_NOT_LOGGED_IN
         }
 
-        val payload = number.toByteArray(Charsets.UTF_8)
-        Log.i(TAG, "SELECT ok → returning student '$number' (${payload.size} bytes)")
+        // Sigurnosen potpisан payload (HMAC + timestamp) — sprečuva replay
+        // i edinstvenо backend-ot mozhe da go validira со споделениoт klu5.
+        val signed = SecureNfc.build(number)
+        val payload = signed.toByteArray(Charsets.UTF_8)
+        Log.i(TAG, "SELECT ok → signed payload (${payload.size} bytes)")
+
+        // Notifyaj UI deka tapоt e uspesheн
+        _tapEvents.tryEmit(System.currentTimeMillis())
+
         return payload + STATUS_OK
     }
 
@@ -88,5 +104,13 @@ class TapInHceService : HostApduService() {
         private val STATUS_NOT_LOGGED_IN = byteArrayOf(0x90.toByte(), 0x02)
         private val STATUS_FILE_NOT_FOUND= byteArrayOf(0x6A.toByte(), 0x82.toByte())
         private val STATUS_FAILURE       = byteArrayOf(0x6F.toByte(), 0x00)
+
+        /** Emitira timestamp ms koga uspeshno e ispraten potpis (HCE → UI). */
+        private val _tapEvents = MutableSharedFlow<Long>(
+            replay = 1,
+            extraBufferCapacity = 4,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+        val tapEvents: SharedFlow<Long> = _tapEvents.asSharedFlow()
     }
 }

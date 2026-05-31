@@ -35,9 +35,9 @@ def start_session(
 ) -> SessionView:
     course = db.get(Course, req.courseId)
     if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise HTTPException(status_code=404, detail="Предметот не е најден")
     if not user.is_admin and course.teacher_id != user.id:
-        raise HTTPException(status_code=403, detail="You don't own this course")
+        raise HTTPException(status_code=403, detail="Овој предмет не е твој")
 
     s = AttendanceSession(course_id=course.id, teacher_id=user.id)
     db.add(s)
@@ -54,9 +54,9 @@ def close_session(
 ) -> None:
     s = db.get(AttendanceSession, session_id)
     if not s:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail="Сесијата не е најдена")
     if not user.is_admin and s.teacher_id != user.id:
-        raise HTTPException(status_code=403, detail="Not your session")
+        raise HTTPException(status_code=403, detail="Ова не е твоја сесија")
     if s.ended_at is None:
         s.ended_at = datetime.now(timezone.utc)
         db.commit()
