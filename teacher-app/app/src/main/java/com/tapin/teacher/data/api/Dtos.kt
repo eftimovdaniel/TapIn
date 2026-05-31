@@ -83,7 +83,8 @@ data class SessionView(
 
 @Serializable
 data class TapRecord(
-    val studentId: Long,
+    val studentId: Long? = null,
+    val signedPayload: String? = null,
     val tappedAt: String? = null
 )
 
@@ -98,6 +99,7 @@ data class BulkAttendanceResponse(
     val accepted: Int,
     val duplicates: Int,
     val rejected: Int,
+    val invalidSignatures: Int = 0,
     val ids: List<Long> = emptyList()
 )
 

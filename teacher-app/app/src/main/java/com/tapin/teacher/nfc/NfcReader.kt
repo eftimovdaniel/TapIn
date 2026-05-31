@@ -30,8 +30,20 @@ import kotlinx.coroutines.flow.asSharedFlow
 class NfcReader(private val activity: Activity) {
 
     sealed interface Result {
-        /** Got a usable student number (from HCE or NDEF). */
-        data class Tapped(val studentNumber: String, val source: Source) : Result
+        /**
+         * Got a usable tap.
+         *
+         *  [studentNumber] e secogash chist broj (za vizuelen feedback).
+         *  [signedPayload] e celiot HMAC-potpishan string DOKOLKU studentskata
+         *  aplikacija isprаti sigurnosen format ("studentNumber|ts|hmac").
+         *  Ako e null, znachi vlегувa preku staro / NDEF / manuelno —
+         *  backend ke pravi normalen lookup po broj.
+         */
+        data class Tapped(
+            val studentNumber: String,
+            val source: Source,
+            val signedPayload: String? = null,
+        ) : Result
         /** Could only read the raw card UID. */
         data class RawUid(val uid: String) : Result
         /** Tag couldn't be read at all. */
@@ -74,13 +86,25 @@ class NfcReader(private val activity: Activity) {
     }
 
     private fun onTag(tag: Tag) {
-        // 1) Try ISO-DEP (HCE)
-        readHce(tag)?.let {
-            _events.tryEmit(Result.Tapped(it, Result.Source.HCE))
+        // 1) Try ISO-DEP (HCE) — najpovekje vraka potpishan payload
+        readHce(tag)?.let { raw ->
+            val parts = raw.split("|")
+            if (parts.size == 3 && parts[0].isNotBlank() && parts[2].length == 16) {
+                _events.tryEmit(
+                    Result.Tapped(
+                        studentNumber = parts[0],
+                        source = Result.Source.HCE,
+                        signedPayload = raw,
+                    )
+                )
+            } else {
+                // Legacy / unsigned payload — sаmo broj
+                _events.tryEmit(Result.Tapped(raw, Result.Source.HCE))
+            }
             return
         }
 
-        // 2) Try NDEF
+        // 2) Try NDEF — fizichkоТ tag (bez potpis)
         readNdef(tag)?.let {
             _events.tryEmit(Result.Tapped(it, Result.Source.NDEF))
             return

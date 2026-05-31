@@ -16,11 +16,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,13 +31,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.ViewModelProvider
 import com.tapin.teacher.data.api.AttendanceView
 import com.tapin.teacher.data.api.CourseView
 import com.tapin.teacher.nfc.NfcReader
@@ -48,6 +53,7 @@ import com.tapin.teacher.ui.Ink60
 import com.tapin.teacher.ui.Paper
 import com.tapin.teacher.ui.SessionViewModel
 import com.tapin.teacher.ui.Success
+import com.tapin.teacher.util.TapFeedback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -60,21 +66,46 @@ fun SessionScreen(
     nfcEnabled: Boolean,
     onBack: () -> Unit,
 ) {
+    val ctx = LocalContext.current
+    val app = ctx.applicationContext as android.app.Application
+
     val vm: SessionViewModel = viewModel(
         key = "session-${course.id}",
-        factory = viewModelFactory { initializer { SessionViewModel(course) } }
+        factory = viewModelFactory {
+            initializer {
+                SessionViewModel(app, course)
+            }
+        }
     )
     val state by vm.state.collectAsStateWithLifecycle()
+    val pendingCount by vm.pendingCount.collectAsStateWithLifecycle()
     var showManual by remember { mutableStateOf(false) }
 
     LaunchedEffect(nfcEvents) {
         nfcEvents.collect { vm.onNfcResult(it) }
     }
 
+    // Haptic + zvuk feedback koga ima нов tap
     LaunchedEffect(state.lastTap) {
+        when (val t = state.lastTap) {
+            is SessionViewModel.TapEvent.Recorded -> TapFeedback.success(ctx)
+            is SessionViewModel.TapEvent.QueuedOffline -> TapFeedback.success(ctx)
+            is SessionViewModel.TapEvent.Duplicate -> TapFeedback.error(ctx)
+            is SessionViewModel.TapEvent.StudentNotFound -> TapFeedback.error(ctx)
+            is SessionViewModel.TapEvent.Failed -> TapFeedback.error(ctx)
+            is SessionViewModel.TapEvent.RawUid -> TapFeedback.error(ctx)
+            null -> Unit
+        }
         if (state.lastTap != null) {
             delay(2200)
             vm.clearLastTap()
+        }
+    }
+
+    LaunchedEffect(state.syncMessage) {
+        if (state.syncMessage != null) {
+            delay(3000)
+            vm.clearSyncMessage()
         }
     }
 
@@ -109,9 +140,20 @@ fun SessionScreen(
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Spacer(Modifier.height(4.dp))
+
+            // Sync banner — vekje pending zapisi
+            if (pendingCount > 0 || state.isSyncing || state.syncMessage != null) {
+                SyncBanner(
+                    pendingCount = pendingCount,
+                    isSyncing = state.isSyncing,
+                    syncProgress = state.syncProgress,
+                    syncMessage = state.syncMessage,
+                    onSync = vm::syncPending,
+                )
+            }
 
             when {
                 state.session == null -> StartCard(
@@ -151,6 +193,78 @@ fun SessionScreen(
                 showManual = false
             }
         )
+    }
+}
+
+@Composable
+private fun SyncBanner(
+    pendingCount: Int,
+    isSyncing: Boolean,
+    syncProgress: Pair<Int, Int>,
+    syncMessage: String?,
+    onSync: () -> Unit,
+) {
+    Surface(
+        color = if (pendingCount > 0) Ink else Ink10,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    if (pendingCount > 0) Icons.Outlined.CloudOff else Icons.Outlined.CloudUpload,
+                    contentDescription = null,
+                    tint = if (pendingCount > 0) Paper else Ink,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        if (pendingCount > 0) "$pendingCount на чекање" else "Сè синхронизирано",
+                        color = if (pendingCount > 0) Paper else Ink,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    if (syncMessage != null) {
+                        Text(syncMessage,
+                             color = if (pendingCount > 0) Color(0xFFCFCFD2) else Ink60,
+                             style = MaterialTheme.typography.bodySmall)
+                    } else if (pendingCount > 0) {
+                        Text("Записи зачувани локално, чекаат сервер.",
+                             color = Color(0xFFCFCFD2),
+                             style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (pendingCount > 0) {
+                    Button(
+                        onClick = onSync,
+                        enabled = !isSyncing,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Paper, contentColor = Ink
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                    ) {
+                        if (isSyncing) CircularProgressIndicator(
+                            Modifier.size(14.dp), color = Ink, strokeWidth = 2.dp
+                        ) else Text("Синхронизирај",
+                                    style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+            }
+            if (isSyncing && syncProgress.second > 0) {
+                Spacer(Modifier.height(10.dp))
+                LinearProgressIndicator(
+                    progress = { syncProgress.first.toFloat() / syncProgress.second.toFloat() },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Paper,
+                    trackColor = Color(0xFF3F3F44),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text("${syncProgress.first} / ${syncProgress.second}",
+                     color = Color(0xFFCFCFD2),
+                     style = MaterialTheme.typography.labelSmall)
+            }
+        }
     }
 }
 
@@ -211,7 +325,7 @@ private fun ActiveCard(
         else -> Success
     }
 
-    Surface(color = Ink, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(color = Ink, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Column(
             Modifier.padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -269,7 +383,7 @@ private fun ActiveCard(
                     if (isClosing) CircularProgressIndicator(
                         Modifier.size(16.dp), color = Ink, strokeWidth = 2.dp
                     ) else {
-                        Icon(Icons.Outlined.Close, contentDescription = null,
+                        Icon(Icons.Outlined.Stop, contentDescription = null,
                              modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("Затвори")
@@ -345,6 +459,8 @@ private fun TapFeedbackBanner(lastTap: SessionViewModel.TapEvent?) {
     val (text, sub, ok) = when (lastTap) {
         is SessionViewModel.TapEvent.Recorded ->
             Triple("Запишано", lastTap.name + (lastTap.number?.let { " · $it" } ?: ""), true)
+        is SessionViewModel.TapEvent.QueuedOffline ->
+            Triple("Зачувано локално", "Број: ${lastTap.number} · ќе се синхронизира", true)
         is SessionViewModel.TapEvent.Duplicate ->
             Triple("Веќе запишан", lastTap.name, false)
         is SessionViewModel.TapEvent.StudentNotFound ->
@@ -407,7 +523,7 @@ private fun AttendanceList(items: List<AttendanceView>) {
 
 @Composable
 private fun AttendanceRow(a: AttendanceView) {
-    Surface(color = Ink10, shape = RoundedCornerShape(12.dp),
+    Surface(color = Ink10, shape = RoundedCornerShape(10.dp),
             modifier = Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
