@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="mk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TapIn — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/style.css" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ink: { DEFAULT: "#0E0E0F", 80: "#1B1B1D", 60: "#3F3F44", 40: "#8A8A92", 20: "#EAEAEA", 10: "#F4F4F4" },
+              paper: "#FFFFFF",
+              danger: "#B0463A",
+              success: "#1F7A53",
+            },
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+            },
+            borderRadius: { '2xl': '1.25rem', '3xl': '1.75rem' },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-paper text-ink antialiased font-sans">
+    <main class="mx-auto flex min-h-screen max-w-md flex-col justify-between px-7 py-8">
+      <div class="flex items-center justify-between text-[11px] tracking-[0.16em] text-ink-40">
+        <span>TAPIN — DASHBOARD</span>
+        <span>v1.0</span>
+      </div>
+
+      <div class="flex flex-col items-center text-center">
+        <h1 class="text-[40px] leading-tight font-bold tracking-tight">Najavi se.</h1>
+        <p class="mt-2 text-sm text-ink-40">
+          Pregled na atendansa, statistiki<br />i izvozi.
+        </p>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <label class="block">
+          <span class="text-xs font-medium tracking-wide text-ink-60">Email</span>
+          <input
+            id="email"
+            type="email"
+            required
+            autocomplete="email"
+            class="mt-1 w-full rounded-2xl border border-ink-20 bg-paper px-4 py-3 text-base text-ink outline-none focus:border-ink"
+            placeholder="prof@finki.mk"
+          />
+        </label>
+
+        <label class="block">
+          <span class="text-xs font-medium tracking-wide text-ink-60">Lozinka</span>
+          <input
+            id="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            class="mt-1 w-full rounded-2xl border border-ink-20 bg-paper px-4 py-3 text-base text-ink outline-none focus:border-ink"
+          />
+        </label>
+
+        <p id="error" class="hidden text-sm text-danger"></p>
+
+        <button
+          id="submit"
+          type="submit"
+          class="flex h-14 w-full items-center justify-center rounded-full bg-ink text-paper transition active:scale-[0.99] disabled:opacity-60"
+        >
+          <span id="submitLabel">Najavi se</span>
+          <span id="submitSpinner" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-paper border-t-transparent"></span>
+        </button>
+
+        <p class="text-center text-xs text-ink-40">
+          Samo profesori imaat pristap.
+        </p>
+      </form>
+    </main>
+
+    <script type="module" src="./assets/login.js"></script>
+  </body>
+</html>

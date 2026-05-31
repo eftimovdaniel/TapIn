@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TapIn Student</string>
+
+    <!-- HCE service description (visible in OS settings -> Tap & pay) -->
+    <string name="hce_service_description">TapIn — atendansa</string>
+    <string name="hce_aid_group_description">TapIn klasa atendansa</string>
+</resources>

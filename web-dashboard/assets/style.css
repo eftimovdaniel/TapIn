@@ -1,0 +1,69 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* ─────────── Tailwind component-style classes (apply via @layer is fine
+   without a build step, we just write plain CSS) ─────────── */
+
+.stat-card {
+  background: #f4f4f4;
+  border-radius: 1.25rem;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: transform 120ms ease;
+}
+.stat-card:hover {
+  transform: translateY(-1px);
+}
+.stat-label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #8a8a92;
+  font-weight: 500;
+}
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0e0e0f;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.filter-input {
+  border: 1px solid #eaeaea;
+  border-radius: 9999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 14px;
+  background: #ffffff;
+  color: #0e0e0f;
+  outline: none;
+}
+.filter-input:focus {
+  border-color: #0e0e0f;
+}
+
+/* Subtle hover for table rows */
+tbody tr:hover {
+  background: #f9f9f9;
+}
+
+/* Soft shadow when sticky header is detached */
+header.sticky {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
