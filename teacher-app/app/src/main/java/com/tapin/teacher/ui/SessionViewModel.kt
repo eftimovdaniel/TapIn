@@ -116,6 +116,7 @@ class SessionViewModel(
             is NfcReader.Result.Tapped -> recordByStudentNumber(
                 studentNumber = result.studentNumber,
                 signedPayload = result.signedPayload,
+                studentName = result.studentName,
             )
             is NfcReader.Result.RawUid -> _state.update {
                 it.copy(lastTap = TapEvent.RawUid(result.uid))
@@ -129,17 +130,21 @@ class SessionViewModel(
     /** Rachno vnesuvanje na student broj (bez NFC, za testiranje). */
     fun submitManualNumber(studentNumber: String) {
         if (studentNumber.isBlank()) return
-        recordByStudentNumber(studentNumber.trim(), signedPayload = null)
+        recordByStudentNumber(studentNumber.trim(), signedPayload = null, studentName = null)
     }
 
-    private fun recordByStudentNumber(studentNumber: String, signedPayload: String?) {
+    private fun recordByStudentNumber(
+        studentNumber: String,
+        signedPayload: String?,
+        studentName: String?,
+    ) {
         val s = _state.value.session ?: return
         if (!s.active) return
         if (_state.value.tapBusy) return
         _state.update { it.copy(tapBusy = true) }
 
         viewModelScope.launch {
-            val ev = when (val outcome = repo.recordTap(s.id, studentNumber, signedPayload)) {
+            val ev = when (val outcome = repo.recordTap(s.id, studentNumber, signedPayload, studentName)) {
                 is AttendanceRepository.RecordOutcome.Recorded ->
                     TapEvent.Recorded(outcome.name, outcome.number)
                 is AttendanceRepository.RecordOutcome.Duplicate ->

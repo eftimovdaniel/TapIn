@@ -49,12 +49,14 @@ class TapInHceService : HostApduService() {
             Log.w(TAG, "SELECT received but no student number stored (logged out?)")
             return STATUS_NOT_LOGGED_IN
         }
+        val name = StudentNumberStore.getName(applicationContext)
 
-        // Sigurnosen potpisан payload (HMAC + timestamp) — sprečuva replay
-        // i edinstvenо backend-ot mozhe da go validira со споделениoт klu5.
-        val signed = SecureNfc.build(number)
+        // Sigurnosen potpisан payload (HMAC + timestamp) — sprečuva replay i
+        // edinstvenо backend-ot mozhe da go validira со споделениoт klu5.
+        // Spec 3.2.3: payload sodrzhi student_id + student_name (v2 format).
+        val signed = SecureNfc.build(number, studentName = name)
         val payload = signed.toByteArray(Charsets.UTF_8)
-        Log.i(TAG, "SELECT ok → signed payload (${payload.size} bytes)")
+        Log.i(TAG, "SELECT ok → signed payload (${payload.size} bytes, hasName=${!name.isNullOrBlank()})")
 
         // Notifyaj UI deka tapоt e uspesheн
         _tapEvents.tryEmit(System.currentTimeMillis())

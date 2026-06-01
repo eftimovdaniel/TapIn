@@ -70,3 +70,47 @@ def test_malformed_payload_rejected():
 def test_invalid_timestamp_rejected():
     with pytest.raises(NfcPayloadError):
         parse_and_verify("193001|notanumber|abcdef0123456789")
+
+
+# ─────────── v2 (so studentName) — spec 3.2.3 ───────────
+
+def _make_payload_v2(
+    student_number: str,
+    student_name: str,
+    ts: int,
+    secret: str | None = None,
+) -> str:
+    s = secret or get_settings().nfc_shared_secret
+    msg = f"v2:{student_number}:{student_name}:{ts}"
+    sig = _hmac.new(
+        s.encode("utf-8"),
+        msg.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()[:16]
+    return f"v2|{student_number}|{student_name}|{ts}|{sig}"
+
+
+def test_v2_valid_payload_parses():
+    now = int(time.time())
+    p = _make_payload_v2("193001", "Ana Stojanoska", now)
+    out = parse_and_verify(p, now=now)
+    assert out.student_number == "193001"
+    assert out.student_name == "Ana Stojanoska"
+    assert out.timestamp == now
+    assert out.version == 2
+
+
+def test_v2_tampered_name_rejected():
+    now = int(time.time())
+    p = _make_payload_v2("193001", "Ana", now)
+    parts = p.split("|")
+    tampered = "|".join([parts[0], parts[1], "Hacker", parts[3], parts[4]])
+    with pytest.raises(NfcPayloadError):
+        parse_and_verify(tampered, now=now)
+
+
+def test_v2_outside_skew_rejected():
+    now = int(time.time())
+    p = _make_payload_v2("193001", "Ana", now - 3600)
+    with pytest.raises(NfcPayloadError):
+        parse_and_verify(p, now=now)

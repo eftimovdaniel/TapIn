@@ -43,6 +43,7 @@ class NfcReader(private val activity: Activity) {
             val studentNumber: String,
             val source: Source,
             val signedPayload: String? = null,
+            val studentName: String? = null,
         ) : Result
         /** Could only read the raw card UID. */
         data class RawUid(val uid: String) : Result
@@ -89,6 +90,19 @@ class NfcReader(private val activity: Activity) {
         // 1) Try ISO-DEP (HCE) — najpovekje vraka potpishan payload
         readHce(tag)?.let { raw ->
             val parts = raw.split("|")
+            // v2: "v2|number|name|ts|hmac16"  (spec 3.2.3 — so studentName)
+            if (parts.size == 5 && parts[0] == "v2" && parts[1].isNotBlank() && parts[4].length == 16) {
+                _events.tryEmit(
+                    Result.Tapped(
+                        studentNumber = parts[1],
+                        studentName = parts[2].takeIf { it.isNotBlank() },
+                        source = Result.Source.HCE,
+                        signedPayload = raw,
+                    )
+                )
+                return
+            }
+            // v1: "number|ts|hmac16" (legacy bez ime)
             if (parts.size == 3 && parts[0].isNotBlank() && parts[2].length == 16) {
                 _events.tryEmit(
                     Result.Tapped(

@@ -6,9 +6,13 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * NFC payload format koe go prajka studentskata aplikacija pri tap.
  *
- *   payload = "<studentNumber>|<unixSeconds>|<hmac16>"
+ * Spec 3.2.3 bara payload da sodrzi student_id + student_name → koristime v2 format:
  *
- *   hmac16 = HMAC-SHA256(SECRET, "<studentNumber>:<unixSeconds>") → hex → prvите 16 znaci
+ *   v2: "v2|<studentNumber>|<studentName>|<unixSeconds>|<hmac16>"
+ *       hmac16 = HMAC-SHA256(SECRET, "v2:<studentNumber>:<studentName>:<unixSeconds>")[:16]
+ *
+ * Stariot v1 format (bez ime) e i ponatamu validен na backend kako fallback,
+ * no studentskata aplikacija sega secogash isprakja v2.
  *
  * Backend ja proveruva HMAC podpisоt + window ±60s na timestamp-ot.
  * Toa go spreчuva replay attacks (snimen NFC tag mozhe da se "playback-uje"
@@ -22,12 +26,30 @@ object SecureNfc {
     /** Споделен sekret — moora se istot kako na backend (config.NFC_SHARED_SECRET). */
     const val SHARED_SECRET = "TAPIN_NFC_SECRET_v1_2026"
 
-    /** Plotki gradi payload za HCE odgovorot. */
-    fun build(studentNumber: String, nowSeconds: Long = System.currentTimeMillis() / 1000): String {
-        val msg = "$studentNumber:$nowSeconds"
+    /**
+     * Gradi v2 payload so studentName (spec 3.2.3).
+     * Ako [studentName] e prazno, padame na v1 format (samo broj) za kompatibilnost.
+     */
+    fun build(
+        studentNumber: String,
+        studentName: String? = null,
+        nowSeconds: Long = System.currentTimeMillis() / 1000,
+    ): String {
+        val name = studentName?.let(::sanitizeName).orEmpty()
+        if (name.isBlank()) {
+            // Legacy v1 — zachuvani backward compat ako name ne e dostapno
+            val msg = "$studentNumber:$nowSeconds"
+            val mac = hmacSha256Hex(SHARED_SECRET, msg).take(16)
+            return "$studentNumber|$nowSeconds|$mac"
+        }
+        val msg = "v2:$studentNumber:$name:$nowSeconds"
         val mac = hmacSha256Hex(SHARED_SECRET, msg).take(16)
-        return "$studentNumber|$nowSeconds|$mac"
+        return "v2|$studentNumber|$name|$nowSeconds|$mac"
     }
+
+    /** Pipe (`|`) e razdvojuvac vo payload-ot — go zamenuvame so razmak. */
+    private fun sanitizeName(name: String): String =
+        name.trim().replace('|', ' ').replace(Regex("\\s+"), " ")
 
     private fun hmacSha256Hex(secret: String, msg: String): String {
         val mac = Mac.getInstance("HmacSHA256")

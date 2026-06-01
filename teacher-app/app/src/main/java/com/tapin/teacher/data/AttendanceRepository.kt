@@ -69,14 +69,15 @@ class AttendanceRepository(context: Context) {
                         )
                     )
                 )
+                val display = studentName?.takeIf { it.isNotBlank() } ?: studentNumber
                 when {
                     resp.accepted > 0 -> {
                         dao.markSynced(localId, syncedAt = OffsetDateTime.now().toString())
-                        RecordOutcome.Recorded(studentName ?: studentNumber, studentNumber)
+                        RecordOutcome.Recorded(display, studentNumber)
                     }
                     resp.duplicates > 0 -> {
                         dao.markSynced(localId, syncedAt = OffsetDateTime.now().toString())
-                        RecordOutcome.Duplicate(studentName ?: studentNumber)
+                        RecordOutcome.Duplicate(display)
                     }
                     resp.invalidSignatures > 0 -> {
                         dao.markRejected(localId, "Невалиден потпис")

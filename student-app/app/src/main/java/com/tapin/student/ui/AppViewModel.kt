@@ -35,7 +35,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val s = store.current()
             if (s != null && s.user.role == "STUDENT") {
                 ApiClient.setToken(s.token)
-                StudentNumberStore.set(getApplication(), s.user.studentNumber)
+                StudentNumberStore.set(getApplication(), s.user.studentNumber, s.user.fullName)
                 _state.value = AuthState.LoggedIn(s.user)
             } else {
                 StudentNumberStore.set(getApplication(), null)
@@ -57,7 +57,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 ApiClient.setToken(resp.token)
                 store.save(resp.token, resp.user)
-                StudentNumberStore.set(getApplication(), resp.user.studentNumber)
+                StudentNumberStore.set(getApplication(), resp.user.studentNumber, resp.user.fullName)
                 _state.value = AuthState.LoggedIn(resp.user)
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
@@ -82,7 +82,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 )
                 ApiClient.setToken(resp.token)
                 store.save(resp.token, resp.user)
-                StudentNumberStore.set(getApplication(), resp.user.studentNumber)
+                StudentNumberStore.set(getApplication(), resp.user.studentNumber, resp.user.fullName)
                 _state.value = AuthState.LoggedIn(resp.user)
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
