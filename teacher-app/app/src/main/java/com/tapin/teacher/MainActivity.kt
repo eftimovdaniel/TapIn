@@ -11,6 +11,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import com.tapin.teacher.nfc.NfcReader
 import com.tapin.teacher.ui.AppViewModel
 import com.tapin.teacher.ui.AuthState
 import com.tapin.teacher.ui.Paper
+import com.tapin.teacher.ui.PostLoginTarget
 import com.tapin.teacher.ui.TapInTheme
 import com.tapin.teacher.ui.screens.CoursesScreen
 import com.tapin.teacher.ui.screens.HomeScreen
@@ -102,13 +104,19 @@ private fun App(
             }
         }
 
-        is AuthState.LoggedIn -> AuthedNavigation(
-            user = s.user,
-            nfc = nfc,
-            nfcEnabledFlow = nfcEnabledFlow,
-            setNfcDesired = setNfcDesired,
-            onLogout = vm::logout,
-        )
+        is AuthState.LoggedIn -> {
+            val postLogin by vm.postLoginTarget.collectAsStateWithLifecycle()
+            AuthedNavigation(
+                user = s.user,
+                nfc = nfc,
+                nfcEnabledFlow = nfcEnabledFlow,
+                setNfcDesired = setNfcDesired,
+                rememberCourse = vm::rememberCourse,
+                forgetLastCourse = vm::forgetLastCourse,
+                postLogin = postLogin,
+                onLogout = vm::logout,
+            )
+        }
     }
 }
 
@@ -124,11 +132,31 @@ private fun AuthedNavigation(
     nfc: NfcReader,
     nfcEnabledFlow: MutableStateFlow<Boolean>,
     setNfcDesired: (Boolean) -> Unit,
+    rememberCourse: (CourseView) -> Unit,
+    forgetLastCourse: () -> Unit,
+    postLogin: PostLoginTarget,
     onLogout: () -> Unit,
 ) {
-    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
     val nfcEnabled by nfcEnabledFlow.collectAsState()
     val nfcSupported = nfc.isSupported
+
+    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+
+    // Spec 3.1.2 — po login avtomatski otvori sesija koga e poznato
+    LaunchedEffect(postLogin) {
+        screen = when (postLogin) {
+            PostLoginTarget.Loading -> Screen.Home
+            PostLoginTarget.Home -> Screen.Home
+            is PostLoginTarget.AttendanceSession -> Screen.Session(postLogin.course)
+        }
+    }
+
+    if (postLogin is PostLoginTarget.Loading) {
+        Box(Modifier.fillMaxSize().background(Paper), Alignment.Center) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        return
+    }
 
     when (val s = screen) {
         Screen.Home -> HomeScreen(
@@ -140,7 +168,10 @@ private fun AuthedNavigation(
         )
         Screen.Courses -> CoursesScreen(
             onBack = { screen = Screen.Home },
-            onCourseSelected = { course -> screen = Screen.Session(course) },
+            onCourseSelected = { course ->
+                rememberCourse(course)
+                screen = Screen.Session(course)
+            },
         )
         is Screen.Session -> {
             // NFC reader stays on while this screen is shown
@@ -153,7 +184,11 @@ private fun AuthedNavigation(
                 nfcEvents = nfc.events,
                 nfcSupported = nfcSupported,
                 nfcEnabled = nfcEnabled,
-                onBack = { screen = Screen.Courses },
+                onBack = {
+                    // Korisnikot eksplicitno izleguva — ne avtomatski startuvaj sesija pri sledno otvaranje
+                    forgetLastCourse()
+                    screen = Screen.Courses
+                },
             )
         }
     }

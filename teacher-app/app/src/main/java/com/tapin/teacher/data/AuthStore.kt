@@ -4,10 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.tapin.teacher.data.api.CourseView
 import com.tapin.teacher.data.api.UserView
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 private val Context.dataStore by preferencesDataStore(name = "tapin_auth")
 
@@ -18,6 +21,9 @@ class AuthStore(private val context: Context) {
     private val emailKey   = stringPreferencesKey("email")
     private val nameKey    = stringPreferencesKey("name")
     private val roleKey    = stringPreferencesKey("role")
+    private val lastCourseJsonKey = stringPreferencesKey("last_course_json")
+
+    private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     data class Session(val token: String, val user: UserView)
 
@@ -30,7 +36,15 @@ class AuthStore(private val context: Context) {
         Session(token, UserView(id, email, name, role))
     }
 
+    /** Ako vekje e izbran predmet vo prethodna sesija, pri sledno login go vrakame
+     *  pravo na SessionScreen — spec 3.1.2: avtomatska aktivacija na sesija. */
+    val lastCourseFlow: Flow<CourseView?> = context.dataStore.data.map { prefs ->
+        val raw = prefs[lastCourseJsonKey] ?: return@map null
+        runCatching { json.decodeFromString<CourseView>(raw) }.getOrNull()
+    }
+
     suspend fun current(): Session? = sessionFlow.first()
+    suspend fun lastCourse(): CourseView? = lastCourseFlow.first()
 
     suspend fun save(token: String, user: UserView) {
         context.dataStore.edit {
@@ -40,6 +54,14 @@ class AuthStore(private val context: Context) {
             it[nameKey] = user.fullName
             it[roleKey] = user.role
         }
+    }
+
+    suspend fun saveLastCourse(course: CourseView) {
+        context.dataStore.edit { it[lastCourseJsonKey] = json.encodeToString(course) }
+    }
+
+    suspend fun clearLastCourse() {
+        context.dataStore.edit { it.remove(lastCourseJsonKey) }
     }
 
     suspend fun clear() {

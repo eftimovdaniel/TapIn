@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.tapin.teacher.data.AuthStore
 import com.tapin.teacher.data.api.ApiClient
 import com.tapin.teacher.data.api.ApiException
+import com.tapin.teacher.data.api.CourseView
 import com.tapin.teacher.data.api.LoginRequest
 import com.tapin.teacher.data.api.RegisterRequest
 import com.tapin.teacher.data.api.UserView
@@ -22,6 +23,13 @@ sealed interface AuthState {
     data class LoggedIn(val user: UserView) : AuthState
 }
 
+/** Kade da odi profesorot posle login — spec 3.1.2 avtomatska sesija. */
+sealed interface PostLoginTarget {
+    data object Loading : PostLoginTarget
+    data object Home : PostLoginTarget
+    data class AttendanceSession(val course: CourseView) : PostLoginTarget
+}
+
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private val store = AuthStore(app)
@@ -29,15 +37,48 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
     val state: StateFlow<AuthState> = _state.asStateFlow()
 
+    private val _postLoginTarget = MutableStateFlow<PostLoginTarget>(PostLoginTarget.Loading)
+    val postLoginTarget: StateFlow<PostLoginTarget> = _postLoginTarget.asStateFlow()
+
+    fun rememberCourse(course: CourseView) {
+        viewModelScope.launch { store.saveLastCourse(course) }
+    }
+
+    fun forgetLastCourse() {
+        viewModelScope.launch { store.clearLastCourse() }
+    }
+
     init {
         viewModelScope.launch {
             val s = store.current()
             if (s != null) {
                 ApiClient.setToken(s.token)
                 _state.value = AuthState.LoggedIn(s.user)
+                resolvePostLoginTarget()
             } else {
                 _state.value = AuthState.LoggedOut()
+                _postLoginTarget.value = PostLoginTarget.Home
             }
+        }
+    }
+
+    /** Spec 3.1.2 — po login otvori sesija (posleden predmet ili edinstven predmet). */
+    private suspend fun resolvePostLoginTarget() {
+        _postLoginTarget.value = PostLoginTarget.Loading
+        store.lastCourse()?.let { saved ->
+            _postLoginTarget.value = PostLoginTarget.AttendanceSession(saved)
+            return
+        }
+        try {
+            val courses = ApiClient.listCourses()
+            if (courses.size == 1) {
+                store.saveLastCourse(courses.first())
+                _postLoginTarget.value = PostLoginTarget.AttendanceSession(courses.first())
+            } else {
+                _postLoginTarget.value = PostLoginTarget.Home
+            }
+        } catch (_: Exception) {
+            _postLoginTarget.value = PostLoginTarget.Home
         }
     }
 
@@ -53,6 +94,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 ApiClient.setToken(resp.token)
                 store.save(resp.token, resp.user)
                 _state.value = AuthState.LoggedIn(resp.user)
+                resolvePostLoginTarget()
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
@@ -76,6 +118,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 ApiClient.setToken(resp.token)
                 store.save(resp.token, resp.user)
                 _state.value = AuthState.LoggedIn(resp.user)
+                resolvePostLoginTarget()
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
@@ -89,6 +132,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             store.clear()
             ApiClient.setToken(null)
             _state.value = AuthState.LoggedOut()
+            _postLoginTarget.value = PostLoginTarget.Home
         }
     }
 

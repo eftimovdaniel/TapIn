@@ -85,6 +85,12 @@ fun SessionScreen(
         nfcEvents.collect { vm.onNfcResult(it) }
     }
 
+    // Spec 3.1.2 — sesijata avtomatski se aktivira koga teacher kje vleze vo ekranot
+    // (po izbor na predmet ili pri restoracija na posleden koristen predmet).
+    LaunchedEffect(course.id) {
+        if (state.session == null && !state.isStarting) vm.startSession()
+    }
+
     // Haptic + zvuk feedback koga ima нов tap
     LaunchedEffect(state.lastTap) {
         when (val t = state.lastTap) {
@@ -275,10 +281,17 @@ private fun StartCard(isStarting: Boolean, onStart: () -> Unit) {
             Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Сесијата сè уште не е започната",
-                 style = MaterialTheme.typography.headlineMedium, color = Ink)
-            Text("Притисни за да започнеш сесија. Студентите ќе можат да тапнат за присуство.",
-                 color = Ink40, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                if (isStarting) "Се активира сесија…" else "Сесијата сè уште не е започната",
+                style = MaterialTheme.typography.headlineMedium, color = Ink
+            )
+            Text(
+                if (isStarting)
+                    "Подготвуваме сè за прием на NFC тапови."
+                else
+                    "Се обиде автоматска активација. Притисни повторно ако треба.",
+                color = Ink40, style = MaterialTheme.typography.bodyMedium
+            )
             Spacer(Modifier.height(4.dp))
             Button(
                 onClick = onStart,
