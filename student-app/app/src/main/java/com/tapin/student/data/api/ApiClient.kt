@@ -20,11 +20,11 @@ object ApiConfig {
     /**
      * BASE_URL — kade da se zakaci klientot.
      *
-     *  Produkcija (Render):             https://tapin.onrender.com
+     *  Produkcija (Render):             https://tapin-n81l.onrender.com
      *  Real telefon (Mac LAN IP):       http://192.168.0.106:8080
      *  Android emulator na host Mac:    http://10.0.2.2:8080
      */
-    const val BASE_URL = "https://tapin.onrender.com"
+    const val BASE_URL = "https://tapin-n81l.onrender.com"
 }
 
 class ApiException(val statusCode: Int, val friendlyMessage: String) : Exception(friendlyMessage)

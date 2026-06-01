@@ -151,6 +151,8 @@ od ist origin → bez CORS / SSL nervi. Za baza koristime Supabase (vekje free).
 4. Vo `tapin` servisot → **Environment** → popolni `DATABASE_URL` so URI od chekor 1
 5. **Manual Deploy** → po ~3–4 min imash live URL: `https://tapin-XXXX.onrender.com`
 
+> Live URL na овој proekt: <https://tapin-n81l.onrender.com>
+
 `render.yaml` Blueprint avtomatski go gradi `Dockerfile` od repo root, generira `JWT_SECRET`,
 postavuva healthcheck na `/actuator/health` i koristi Frankfurt region.
 
