@@ -1,0 +1,49 @@
+# Render Blueprint — eden-klik deploy za TapIn.
+#
+# Kako da go pravish:
+#   1. Push-ni go repoto na GitHub (vekje e: eftimovdaniel/TapIn)
+#   2. Otvori https://dashboard.render.com/blueprints  →  "New Blueprint Instance"
+#   3. Izberi GitHub repo "TapIn", potvrdi
+#   4. Render avtomatski go cita ovoj fajl i kreira servis "tapin"
+#   5. Vo "Environment" tab popolni DATABASE_URL (od Supabase Connection Pooler)
+#   6. Deploy → po ~3–4 min imash live URL: https://tapin-XXXX.onrender.com
+#
+# Naporedno serviraat backend (/api/*) i dashboard (/, /dashboard, /register).
+# Mobilnite app go menjuvaat samo BASE_URL na toj URL.
+
+services:
+  - type: web
+    name: tapin
+    runtime: docker
+    plan: free               # 512 MB RAM, sleeps po 15 min idle
+    region: frankfurt        # najblisku do MK
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeploy: true         # push na main → avtomatski redeploy
+    envVars:
+      # Supabase Postgres pooler URL — postavi rachno vo Render dashboard
+      # Format: postgresql+psycopg://postgres.XXX:PASS@aws-1-eu-central-1.pooler.supabase.com:5432/postgres
+      - key: DATABASE_URL
+        sync: false
+
+      # JWT — Render generira sigurna sluchajna vrednost pri prv deploy
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: JWT_TTL_HOURS
+        value: "24"
+
+      # Backend i dashboard se na ist origin → CORS ne e kritichno,
+      # no go ostavame "*" za sluchaj na alternativen front (lokalen dev itn.)
+      - key: CORS_ORIGINS
+        value: "*"
+
+      # NFC HMAC sekret — ISTIOT moora da postoi vo student app
+      # (com.tapin.student.nfc.SecureNfc.SHARED_SECRET).
+      # Ako se promeni ovde, ponovo build APK na student-app.
+      - key: NFC_SHARED_SECRET
+        value: TAPIN_NFC_SECRET_v1_2026
+
+      - key: NFC_MAX_SKEW_SECONDS
+        value: "60"

@@ -1,0 +1,39 @@
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/venv/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Tajni / lokalni
+**/.env
+**/.env.local
+**/local.properties
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Git
+.git/
+.gitignore
+**/.gitignore
+
+# Android build output (ne treba vo backend image)
+**/build/
+**/.gradle/
+**/*.apk
+**/*.aab
+**/*.iml
+
+# Docs / README (ne vlijaat na runtime)
+**/README.md
+LICENSE
+
+# Docker / CI
+docker-compose.yml
+.github/

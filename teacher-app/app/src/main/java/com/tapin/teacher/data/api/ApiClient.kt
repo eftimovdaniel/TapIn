@@ -21,13 +21,18 @@ object ApiConfig {
     /**
      * BASE_URL — kade da se zakaci klientot.
      *
+     *  Produkcija (Render):             https://tapin.onrender.com
      *  Real telefon (Mac LAN IP):       http://192.168.0.106:8080
      *  Android emulator na host Mac:    http://10.0.2.2:8080
      *
-     * Ako Mac ti dobijе drug LAN IP (napr. drugo Wi-Fi), zameni go ovde
-     * i pokreni: ./gradlew assembleDebug   pa   adb install -r app-debug.apk
+     * Smeni ja vrednosta podolu i ponovo build:
+     *   ./gradlew assembleDebug   pa   adb install -r app-debug.apk
+     *
+     * NAPOMENA: ako koristish HTTPS (Render), dodatno ne treba nishto —
+     * Android default dozvoluva HTTPS. Ako koristish HTTP (lokalno),
+     * AndroidManifest.xml ima `usesCleartextTraffic=true`.
      */
-    const val BASE_URL = "http://192.168.0.106:8080"
+    const val BASE_URL = "https://tapin.onrender.com"
 }
 
 class ApiException(val statusCode: Int, val friendlyMessage: String) : Exception(friendlyMessage)
