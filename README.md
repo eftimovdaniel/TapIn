@@ -4,26 +4,33 @@
 
 Дистрибуиран систем составен од **четири компоненти** кои работат заедно: серверски backend со REST API, две Android апликации (професор и студент) и веб дашборд.
 
+
 ---
 
 ## Содржина
 
-1. [Преглед на системот](#преглед-на-системот)
-2. [Технологии](#технологии)
-3. [Структура на проектот](#структура-на-проектот)
-4. [Како работи NFC](#како-работи-nfc)
-5. [Модел на податоци](#модел-на-податоци)
-6. [Безбедност](#безбедност)
-7. [REST API — целосна референца](#rest-api--целосна-референца)
-8. [Мобилни апликации](#мобилни-апликации)
-9. [Веб дашборд](#веб-дашборд)
-10. [Брз старт](#брз-старт)
-11. [Docker](#docker)
-12. [Cloud deploy (Render)](#cloud-deploy-render)
-13. [Тестирање](#тестирање)
-14. [Демо акаунти](#демо-акаунти)
+1. [Автори](#автори)
+2. [Преглед на системот](#преглед-на-системот)
+3. [Технологии](#технологии)
+4. [Структура на проектот](#структура-на-проектот)
+5. [Како работи NFC](#како-работи-nfc)
+6. [Модел на податоци](#модел-на-податоци)
+7. [Безбедност](#безбедност)
+8. [REST API — целосна референца](#rest-api--целосна-референца)
+9. [Мобилни апликации](#мобилни-апликации)
+10. [Веб дашборд](#веб-дашборд)
+11. [Брз старт](#брз-старт)
+12. [Docker](#docker)
+13. [Cloud deploy (Render)](#cloud-deploy-render)
+14. [Тестирање](#тестирање)
+15. [Демо акаунти](#демо-акаунти)
 
 ---
+
+## Автори
+>Даниел Ефтимов 102785
+>Горан Милошоски 102706
+>Ирена Ефтимова 102708
 
 ## Преглед на системот
 
@@ -76,7 +83,7 @@ Mobilniaplikacii-grupna/
 ├── database/         ← PostgreSQL schema (Supabase)
 │   └── schema.sql
 ├── backend/          ← Python / FastAPI REST API
-│   ├── main.py           # startna tochka, рутери, хостирање на дашборд
+│   ├── main.py           # почетна точка, рутери, хостирање на дашборд
 │   ├── config.py         # .env конфигурација (DB, JWT, NFC secret)
 │   ├── db.py             # SQLAlchemy engine + session
 │   ├── models.py         # ORM модели (User, Course, Session, Attendance…)
@@ -96,7 +103,7 @@ Mobilniaplikacii-grupna/
 
 ## Како работи NFC
 
-Системот користи **Host-based Card Emulation (HCE)** на студентската апликација и **Reader Mode** (foreground dispatch) на професорската — точно како што препорачува спецификацијата (не се потребни физички тагови).
+Системот користи **Host-based Card Emulation (HCE)** на студентската апликација и **Reader Mode** (foreground dispatch) на професорската. Не се потребни физички тагови.
 
 ```
 ┌──────────────┐   SELECT AID  00 A4 04 00 08 F0544150494E3031   ┌──────────────┐
@@ -116,7 +123,7 @@ Mobilniaplikacii-grupna/
 - **AID:** `F0 54 41 50 49 4E 30 31` (`"TAPIN01"`) — custom, не колидира со платежни картички.
 - **Payload (v2):** `v2|<студентски_број>|<име>|<unixSeconds>|<hmac16>`
   - `hmac16 = HMAC-SHA256(SECRET, "v2:<број>:<име>:<ts>")[:16]`
-  - Спрема спецификацијата 3.2.3 payload-от содржи `student_id` + `student_name`.
+  - Payload-от содржи студентски број и име.
 - **Безбедност:** потписот + timestamp прозорец (±60s) спречуваат **replay attack** — снимен таг не може да се „преиграе" подоцна.
 - Студентската апликација работи **дури и кога телефонот е заклучен** (`requireDeviceUnlock=false` во `apduservice.xml`).
 - Поддржан е и постар **v1** формат (`број|ts|hmac`) и **NDEF** fallback за тестирање со физички тагови.
@@ -172,7 +179,7 @@ users 1──* attendance       (student_id)
 
 Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/docs`
 
-> Сите тела се JSON. Полињата што бараат токен се означени со 🔒 (Bearer). 👨‍🏫 = само професор/админ, 👑 = само админ.
+> Сите тела се JSON. Во колоната **Auth**: „Bearer" = бара токен; „професор/админ" и „админ" означуваат ограничување по улога; „—" = јавен endpoint.
 
 ### Health
 
@@ -186,8 +193,8 @@ Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/do
 |-------|------|------|------|
 | `POST` | `/api/register` | — | Регистрација (201). Алиас: `/api/auth/register` |
 | `POST` | `/api/login` | — | Најава (за професор и студент). Алиас: `/api/auth/login` |
-| `GET` | `/api/auth/me` | 🔒 | Тековен корисник |
-| `GET` | `/api/users/by-number/{student_number}` | 🔒 👨‍🏫 | Lookup на студент по број (за NFC tap resolve) |
+| `GET` | `/api/auth/me` | Bearer | Тековен корисник |
+| `GET` | `/api/users/by-number/{student_number}` | Bearer · професор | Lookup на студент по број (за NFC tap resolve) |
 
 **`POST /api/register`** — body:
 ```json
@@ -217,9 +224,9 @@ Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/do
 
 | Метод | Path | Auth | Опис |
 |-------|------|------|------|
-| `GET` | `/api/courses` | 🔒 👨‍🏫 | Список (професор → свои, админ → сите) |
-| `POST` | `/api/courses` | 🔒 👨‍🏫 | Создавање предмет (201) |
-| `POST` | `/api/courses/{id}/enroll?studentId=...` | 🔒 👨‍🏫 | Запишување студент (204) |
+| `GET` | `/api/courses` | Bearer · професор | Список (професор → свои, админ → сите) |
+| `POST` | `/api/courses` | Bearer · професор | Создавање предмет (201) |
+| `POST` | `/api/courses/{id}/enroll?studentId=...` | Bearer · професор | Запишување студент (204) |
 
 **`POST /api/courses`** — body: `{ "code": "PI1", "name": "Програмирање 1", "teacherId": null }`
 **Одговор** — `CourseView`: `{ "id", "code", "name", "teacherId", "teacherName" }`
@@ -229,9 +236,9 @@ Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/do
 
 | Метод | Path | Auth | Опис |
 |-------|------|------|------|
-| `POST` | `/api/sessions` | 🔒 👨‍🏫 | Започни сесија (201) |
-| `POST` | `/api/sessions/{id}/close` | 🔒 👨‍🏫 | Затвори сесија (204) |
-| `GET` | `/api/sessions?courseId=...` | 🔒 👨‍🏫 | Список сесии |
+| `POST` | `/api/sessions` | Bearer · професор | Започни сесија (201) |
+| `POST` | `/api/sessions/{id}/close` | Bearer · професор | Затвори сесија (204) |
+| `GET` | `/api/sessions?courseId=...` | Bearer · професор | Список сесии |
 
 **`POST /api/sessions`** — body: `{ "courseId": 1 }`
 **Одговор** — `SessionView`:
@@ -248,9 +255,9 @@ Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/do
 
 | Метод | Path | Auth | Опис |
 |-------|------|------|------|
-| `POST` | `/api/attendance` | 🔒 👨‍🏫 | Bulk sync на тапови од професорската апликација |
-| `GET` | `/api/attendance` | 🔒 👨‍🏫 | Список со филтри + пагинација |
-| `DELETE` | `/api/attendance/{id}` | 🔒 👑 | Бришење запис (204) |
+| `POST` | `/api/attendance` | Bearer · професор | Bulk sync на тапови од професорската апликација |
+| `GET` | `/api/attendance` | Bearer · професор | Список со филтри + пагинација |
+| `DELETE` | `/api/attendance/{id}` | Bearer · админ | Бришење запис (204) |
 
 **`POST /api/attendance`** — body (`BulkAttendanceRequest`):
 ```json
@@ -286,11 +293,11 @@ Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/do
 
 | Метод | Path | Auth | Опис |
 |-------|------|------|------|
-| `GET` | `/api/statistics?days=30` | 🔒 👨‍🏫 | Агрегат: overview + perCourse + trend |
-| `GET` | `/api/statistics/overview` | 🔒 👨‍🏫 | Само преглед |
-| `GET` | `/api/statistics/per-course` | 🔒 👨‍🏫 | Стапка по предмет |
-| `GET` | `/api/statistics/trend?days=30` | 🔒 👨‍🏫 | Тренд по денови |
-| `GET` | `/api/statistics/per-student?courseId=...` | 🔒 👨‍🏫 | Стапка по студент |
+| `GET` | `/api/statistics?days=30` | Bearer · професор | Агрегат: overview + perCourse + trend |
+| `GET` | `/api/statistics/overview` | Bearer · професор | Само преглед |
+| `GET` | `/api/statistics/per-course` | Bearer · професор | Стапка по предмет |
+| `GET` | `/api/statistics/trend?days=30` | Bearer · професор | Тренд по денови |
+| `GET` | `/api/statistics/per-student?courseId=...` | Bearer · професор | Стапка по студент |
 
 > Сите се **role-scoped**: професор гледа само свои предмети/сесии, админ — сè.
 
@@ -461,3 +468,4 @@ backend/tests/
 | Студенти | `s200001@ugd.edu.mk` … `s200008@ugd.edu.mk` | `student123` |
 
 Seed-от создава 1 професор, 2 предмети, 8 студенти, 4 сесии (1 активна по предмет) и ~25 случајни тапови за реалистична статистика.
+
