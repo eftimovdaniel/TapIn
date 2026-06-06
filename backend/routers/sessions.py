@@ -1,4 +1,4 @@
-"""Attendance sessions — pochne / zatvori / lista."""
+"""Сесии на присуство — започнување, затворање и листање."""
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,8 +11,11 @@ from models import Attendance, AttendanceSession, Course
 from schemas import SessionView, StartSessionRequest
 
 router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
+# Рутер за управување со животниот циклус на сесиите за присуство.
+# Поддржува започнување на сесија, затворање и листање на сесии.
 
 
+# Претвора AttendanceSession модел и број на присуства во SessionView.
 def _to_view(s: AttendanceSession, count: int) -> SessionView:
     return SessionView(
         id=s.id,
@@ -28,6 +31,7 @@ def _to_view(s: AttendanceSession, count: int) -> SessionView:
 
 
 @router.post("", response_model=SessionView, status_code=201)
+# Започнува нова сесија за присуство за даден предмет.
 def start_session(
     req: StartSessionRequest,
     user: CurrentUser = Depends(require_teacher),
@@ -47,6 +51,7 @@ def start_session(
 
 
 @router.post("/{session_id}/close", status_code=204)
+# Затвора активна сесија за присуство и го означува времето на крај.
 def close_session(
     session_id: int,
     user: CurrentUser = Depends(require_teacher),
@@ -63,6 +68,7 @@ def close_session(
 
 
 @router.get("", response_model=list[SessionView])
+# Го враќа списокот на сесии за присуство видливи на влезениот корисник.
 def list_sessions(
     courseId: int | None = None,
     user: CurrentUser = Depends(require_teacher),

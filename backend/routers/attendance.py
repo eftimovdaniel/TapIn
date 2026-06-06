@@ -1,4 +1,4 @@
-"""Attendance — POST sync (od teacher app) + GET listing (so filteri)."""
+"""Attendance — POST sync (од teacher app) и GET listing (со филтри)."""
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,8 +17,13 @@ from schemas import (
 from secure_nfc import NfcPayloadError, parse_and_verify
 
 router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
+# Рутер за управување со присуство.
+# - POST /api/attendance: синхронизирање на голем број записи од апликацијата за професори
+# - GET /api/attendance: листа на присуство со опционални филтри
+# - DELETE /api/attendance/{attendance_id}: бришење поединечен запис за присуство
 
 
+# Претвора Attendance модел во view одговор.
 def _to_view(a: Attendance) -> AttendanceView:
     return AttendanceView(
         id=a.id,
@@ -32,7 +37,8 @@ def _to_view(a: Attendance) -> AttendanceView:
     )
 
 
-# ─── POST /api/attendance — sync od teacher app ───
+# ─── POST /api/attendance — sync од teacher app ───
+# Прифаќа записи за присуство, ги верификува податоците и ја избегнува двојната евиденција.
 @router.post("", response_model=BulkAttendanceResponse)
 def upload_attendance(
     req: BulkAttendanceRequest,
@@ -55,7 +61,7 @@ def upload_attendance(
         try:
             student_id = r.studentId
 
-            # Sigurnosen potpis: ako e prikachen, validira i resolvira student
+            # Безбеден потпис: ако е приложен, го верификува и го разрешува студентот
             if r.signedPayload:
                 try:
                     verified = parse_and_verify(r.signedPayload)

@@ -1,4 +1,4 @@
-"""Auth endpoints — login, register, me."""
+"""Endpoint-и за автентикација — логирање, регистрација, тековен корисник."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,8 +10,11 @@ from schemas import AuthResponse, LoginRequest, RegisterRequest, UserView
 from security import hash_password, issue_token, verify_password
 
 router = APIRouter(tags=["Auth"])
+# Рутер за автентикација и пребарување корисници.
+# Поддржува регистрација, логирање, проверка на тековен корисник и пребарување студент по број.
 
 
+# Конвентува User модел во AuthResponse со JWT токен и рок на важност.
 def _to_auth_response(user: User) -> AuthResponse:
     token, exp = issue_token(
         user_id=user.id, email=user.email, role=user.role, full_name=user.full_name
@@ -24,8 +27,8 @@ def _to_auth_response(user: User) -> AuthResponse:
 
 
 # ── REGISTER ──────────────────────────────────────────────
-# Spec ne baruvashe registracija, ama nie sami se registrirame,
-# pa expose-uvame i pod /api/register i pod /api/auth/register.
+# Спецификацијата не бараше регистрација, но ние сами се регистрираме,
+# па ја изложуваме и на /api/register и на /api/auth/register.
 @router.post("/api/register", response_model=AuthResponse, status_code=201)
 @router.post("/api/auth/register", response_model=AuthResponse, status_code=201, include_in_schema=False)
 def register(req: RegisterRequest, db: Session = Depends(get_db)) -> AuthResponse:
@@ -56,7 +59,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)) -> AuthRespons
     return _to_auth_response(user)
 
 
-# ── LOGIN (spec endpoint) ──────────────────────────────────
+# ── LOGIN (специфичен endpoint) ───────────────────────────────
 @router.post("/api/login", response_model=AuthResponse)
 @router.post("/api/auth/login", response_model=AuthResponse, include_in_schema=False)
 def login(req: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
@@ -76,9 +79,9 @@ def me(user: CurrentUser = Depends(current_user), db: Session = Depends(get_db))
     return UserView.from_orm_user(db_user)
 
 
-# ── Lookup za NFC tap ──────────────────────────────────────
-# Teacher app po NFC dobiva student_number kako string;
-# ovde go razresuva vo User (id) za potoa POST /api/attendance.
+# ── Пребарување по NFC копче ───────────────────────────────
+# Апликацијата за професори преку NFC добива student_number како стринг;
+# тука го разрешуваме во User (id) за понатамошен POST /api/attendance.
 @router.get("/api/users/by-number/{student_number}", response_model=UserView)
 def find_by_student_number(
     student_number: str,

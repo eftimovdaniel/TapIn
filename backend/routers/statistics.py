@@ -1,7 +1,7 @@
-"""Statistics — GET /api/statistics (agregat) + sub-endpoints.
+"""Statistics — GET /api/statistics (агрегат) + под-endpoint-и.
 
-Role-based: profesori gledat samo svoi predmeti i sesii.
-Admin gleda site.
+Role-based: професорите гледаат само свои предмeти и сесии.
+Админ гледа сѐ.
 """
 from datetime import date, datetime, timedelta, timezone
 
@@ -15,8 +15,11 @@ from models import Attendance, AttendanceSession, Course, Enrollment, User
 from schemas import CourseStat, Overview, StatisticsAggregate, StudentStat, TrendPoint
 
 router = APIRouter(prefix="/api/statistics", tags=["Statistics"])
+# Рутер за статистички прагови и аналитика.
+# Админ гледа сѐ; професор гледа само свои предмети и сесии.
 
 
+# Смета општите статистики за денешниот, неделниот и месечниот период.
 def _overview(db: Session, teacher_id: int | None) -> Overview:
     now = datetime.now(timezone.utc)
     start_today = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
@@ -44,9 +47,8 @@ def _overview(db: Session, teacher_id: int | None) -> Overview:
     active = db.scalar(active_stmt) or 0
 
     if teacher_id is not None:
-        # Distinct studenti koi vekje tapnale prisustvo vo bilo koja sesija
-        # na ovoj profesor (po-relevantno otkolku enrollments koi mozhe da
-        # ne postojat).
+        # Различни студенти кои веќе имаат тапнато присуство во било која сесија
+        # на овој професор (поважни од enrollment записи кои може да не постојат).
         students = db.scalar(
             select(func.count(func.distinct(Attendance.student_id)))
             .join(AttendanceSession, Attendance.session_id == AttendanceSession.id)
@@ -68,7 +70,7 @@ def _overview(db: Session, teacher_id: int | None) -> Overview:
 
 
 def _per_course(db: Session, teacher_id: int | None) -> list[CourseStat]:
-    """Stapka na prisustvo po predmet."""
+    """Присуство по предмет."""
     attended_subq = (
         select(
             AttendanceSession.course_id.label("course_id"),
@@ -111,7 +113,7 @@ def _per_course(db: Session, teacher_id: int | None) -> list[CourseStat]:
 
 
 def _trend(db: Session, days: int, teacher_id: int | None) -> list[TrendPoint]:
-    """Trend na taps po denovi (poslednite N dena)."""
+    """Тренд на тапови по денови (последните N дена)."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     day_col = func.date(Attendance.tapped_at).label("day")
     stmt = (
@@ -132,7 +134,7 @@ def _trend(db: Session, days: int, teacher_id: int | None) -> list[TrendPoint]:
 
 
 def _scope_teacher_id(user: CurrentUser) -> int | None:
-    """ADMIN gleda site; profesor gleda samo svoi."""
+    """ADMIN гледа сѐ; професор гледа само свои сесии и предмети."""
     return None if user.is_admin else user.id
 
 
@@ -152,6 +154,7 @@ def aggregate(
 
 
 @router.get("/overview", response_model=Overview)
+# Враќа само делот overview од статистиката.
 def overview(
     user: CurrentUser = Depends(require_teacher),
     db: Session = Depends(get_db),
@@ -160,6 +163,7 @@ def overview(
 
 
 @router.get("/per-course", response_model=list[CourseStat])
+# Враќа статистика за присуство по предмет.
 def per_course(
     user: CurrentUser = Depends(require_teacher),
     db: Session = Depends(get_db),
@@ -168,6 +172,7 @@ def per_course(
 
 
 @router.get("/trend", response_model=list[TrendPoint])
+# Враќа тренд на присуства по денови.
 def trend(
     days: int = Query(default=30, ge=1, le=365),
     user: CurrentUser = Depends(require_teacher),
@@ -183,16 +188,16 @@ def per_student(
     user: CurrentUser = Depends(require_teacher),
     db: Session = Depends(get_db),
 ) -> list[StudentStat]:
-    """Stapka na prisustvo za sekoj student.
+    """Присуство по студент.
 
-    Filteri:
-      - courseId: ako e zadaden, gleda samo sесии od toj predmet
-      - inaku: site sесии koi se vidlivi za vlechniот korisnik
-        (profesor → svoi sесии; admin → site)
+    Филтри:
+      - courseId: ако е зададен, гледа само сесии од тој предмет
+      - инаку: сите сесии кои се видливи за влезениот корисник
+        (професор → свои сесии; админ → сите)
     """
     teacher_id = _scope_teacher_id(user)
 
-    # 1) Vkupno sесии za score
+    # 1) Вкупен број сесии за пресметка на стапката
     total_sessions_stmt = select(func.count()).select_from(AttendanceSession)
     if teacher_id is not None:
         total_sessions_stmt = total_sessions_stmt.where(
@@ -204,7 +209,7 @@ def per_student(
         )
     total_sessions = db.scalar(total_sessions_stmt) or 0
 
-    # 2) Studenti i broj na pominati sесии (distinct sessions)
+    # 2) Студенти и број на посетени сесии (distinct sessions)
     attended_stmt = (
         select(
             User.id,

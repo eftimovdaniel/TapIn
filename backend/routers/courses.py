@@ -1,4 +1,4 @@
-"""Predmeti (Courses) — kreiranje i listanje."""
+"""Предмети — креирање и листање на предмети."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -9,8 +9,11 @@ from models import Course, Enrollment, User
 from schemas import CourseRequest, CourseView
 
 router = APIRouter(prefix="/api/courses", tags=["Courses"])
+# Рутер за управување со предмети и запишување студенти.
+# Дава можност за листање на предмети, креирање предмет и запишување студент.
 
 
+# Претвора Course модел во CourseView одговор.
 def _to_view(c: Course) -> CourseView:
     return CourseView(
         id=c.id, code=c.code, name=c.name,
@@ -19,6 +22,7 @@ def _to_view(c: Course) -> CourseView:
 
 
 @router.get("", response_model=list[CourseView])
+# Враќа список на предмети: сите за админ, само свои за професор.
 def list_courses(
     user: CurrentUser = Depends(require_teacher),
     db: Session = Depends(get_db),
@@ -31,6 +35,7 @@ def list_courses(
 
 
 @router.post("", response_model=CourseView, status_code=201)
+# Креира нов предмет со назначен професор.
 def create_course(
     req: CourseRequest,
     user: CurrentUser = Depends(require_teacher),
@@ -53,6 +58,7 @@ def create_course(
 
 
 @router.post("/{course_id}/enroll", status_code=204)
+# Запишува студент на предмет ако веќе не е запишан.
 def enroll_student(
     course_id: int,
     studentId: int,
