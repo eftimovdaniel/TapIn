@@ -87,6 +87,7 @@ private fun App(
         ) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
 
         is AuthState.LoggedOut -> {
+            LaunchedEffect(Unit) { showRegister = false }
             if (showRegister) {
                 RegisterScreen(
                     onRegister = { email, pw, name -> vm.register(email, pw, name) },
@@ -106,16 +107,19 @@ private fun App(
 
         is AuthState.LoggedIn -> {
             val postLogin by vm.postLoginTarget.collectAsStateWithLifecycle()
-            AuthedNavigation(
-                user = s.user,
-                nfc = nfc,
-                nfcEnabledFlow = nfcEnabledFlow,
-                setNfcDesired = setNfcDesired,
-                rememberCourse = vm::rememberCourse,
-                forgetLastCourse = vm::forgetLastCourse,
-                postLogin = postLogin,
-                onLogout = vm::logout,
-            )
+            // Nov kluch po user.id — pri smena na profil se resetira navigacija
+            androidx.compose.runtime.key(s.user.id) {
+                AuthedNavigation(
+                    user = s.user,
+                    nfc = nfc,
+                    nfcEnabledFlow = nfcEnabledFlow,
+                    setNfcDesired = setNfcDesired,
+                    rememberCourse = vm::rememberCourse,
+                    forgetLastCourse = vm::forgetLastCourse,
+                    postLogin = postLogin,
+                    onLogout = vm::logout,
+                )
+            }
         }
     }
 }
@@ -167,6 +171,7 @@ private fun AuthedNavigation(
             onLogout = onLogout,
         )
         Screen.Courses -> CoursesScreen(
+            userId = user.id,
             onBack = { screen = Screen.Home },
             onCourseSelected = { course ->
                 rememberCourse(course)

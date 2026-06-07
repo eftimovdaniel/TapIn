@@ -26,16 +26,20 @@ class CoursesViewModel : ViewModel() {
     private val _state = MutableStateFlow(CoursesUiState())
     val state: StateFlow<CoursesUiState> = _state.asStateFlow()
 
-    // pri kreiranje vedanash vchitaj gi predmetite
-    init { refresh() }
+    // refresh() se vika od CoursesScreen so forUserId — ne pri kreiranje na VM
 
-    // povlechi ja listata na predmeti od backend
-    fun refresh() {
+    // povlechi ja listata na predmeti od backend (samo svoi — API + lokalna proverka)
+    fun refresh(forUserId: Long? = null) {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
                 val list = ApiClient.listCourses()
-                _state.update { it.copy(isLoading = false, items = list, error = null) }
+                val owned = if (forUserId != null) {
+                    list.filter { it.teacherId == forUserId }
+                } else {
+                    list
+                }
+                _state.update { it.copy(isLoading = false, items = owned, error = null) }
             } catch (e: ApiException) {
                 _state.update { it.copy(isLoading = false, error = e.friendlyMessage) }
             } catch (e: Exception) {

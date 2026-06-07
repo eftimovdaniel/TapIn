@@ -2,7 +2,7 @@
 const ICON_HIDDEN =
   "https://img.icons8.com/ios/50/closed-eye.png";
 const ICON_VISIBLE =
-  "https://img.icons8.com/ios/50/eye.png";
+  "https://img.icons8.com/parakeet-line/48/visible.png";
 
 export function initPasswordToggles() {
   document.querySelectorAll("[data-password-toggle]").forEach((btn) => {

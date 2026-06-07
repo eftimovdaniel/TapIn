@@ -161,6 +161,8 @@ internal fun WebStyleField(
     isPassword: Boolean = false,
     enabled: Boolean = true,
 ) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -172,10 +174,33 @@ internal fun WebStyleField(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         textStyle = MaterialTheme.typography.bodyMedium,
-        visualTransformation = if (isPassword) PasswordVisualTransformation()
-                               else androidx.compose.ui.text.input.VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = if (isPassword && !passwordVisible) {
+            PasswordVisualTransformation()
+        } else {
+            androidx.compose.ui.text.input.VisualTransformation.None
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (isPassword && passwordVisible) KeyboardType.Text else keyboardType
+        ),
         enabled = enabled,
+        trailingIcon = if (isPassword) {
+            {
+                IconButton(
+                    onClick = { passwordVisible = !passwordVisible },
+                    enabled = enabled,
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (passwordVisible) R.drawable.ic_password_visible
+                            else R.drawable.ic_password_hidden
+                        ),
+                        contentDescription = if (passwordVisible) "Сокриј лозинка" else "Покажи лозинка",
+                        modifier = Modifier.size(20.dp),
+                        tint = Ink40,
+                    )
+                }
+            }
+        } else null,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Ink,
             unfocusedBorderColor = Ink20,

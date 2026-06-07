@@ -22,6 +22,9 @@ class AuthStore(private val context: Context) {
     private val nameKey    = stringPreferencesKey("name")
     private val roleKey    = stringPreferencesKey("role")
     private val lastCourseJsonKey = stringPreferencesKey("last_course_json")
+    private val lastCourseUserIdKey = stringPreferencesKey("last_course_user_id")
+
+    private fun lastCourseKey(userId: Long) = stringPreferencesKey("last_course_$userId")
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
@@ -36,14 +39,31 @@ class AuthStore(private val context: Context) {
         Session(token, UserView(id, email, name, role))
     }
 
-    /** Ako vekje e izbran predmet vo prethodna sesija, pri sledno login go vrakame
-     *  pravo na SessionScreen — spec 3.1.2: avtomatska aktivacija na sesija. */
+    /** Posleden izbran predmet — po userId, za da ne se mesaat profili na ist telefon. */
+    suspend fun lastCourse(userId: Long): CourseView? {
+        val prefs = context.dataStore.data.first()
+        // Nov kluch po korisnik
+        prefs[lastCourseKey(userId)]?.let { raw ->
+            return runCatching { json.decodeFromString<CourseView>(raw) }.getOrNull()
+        }
+        // Legacy: stariot globalen kluch — samo ako pripagja na ovoj korisnik
+        val legacyOwner = prefs[lastCourseUserIdKey]?.toLongOrNull()
+        val legacyRaw = prefs[lastCourseJsonKey]
+        if (legacyRaw != null && legacyOwner == userId) {
+            return runCatching { json.decodeFromString<CourseView>(legacyRaw) }.getOrNull()
+        }
+        return null
+    }
+
+    /** @deprecated koristi lastCourse(userId) */
     val lastCourseFlow: Flow<CourseView?> = context.dataStore.data.map { prefs ->
         val raw = prefs[lastCourseJsonKey] ?: return@map null
         runCatching { json.decodeFromString<CourseView>(raw) }.getOrNull()
     }
 
     suspend fun current(): Session? = sessionFlow.first()
+
+    /** @deprecated koristi lastCourse(userId) */
     suspend fun lastCourse(): CourseView? = lastCourseFlow.first()
 
     suspend fun save(token: String, user: UserView) {
@@ -56,12 +76,24 @@ class AuthStore(private val context: Context) {
         }
     }
 
-    suspend fun saveLastCourse(course: CourseView) {
-        context.dataStore.edit { it[lastCourseJsonKey] = json.encodeToString(course) }
+    suspend fun saveLastCourse(course: CourseView, userId: Long) {
+        context.dataStore.edit {
+            it[lastCourseKey(userId)] = json.encodeToString(course)
+            // Ischisti legacy globalen zapis — povtorno mesanje na profili
+            it.remove(lastCourseJsonKey)
+            it.remove(lastCourseUserIdKey)
+        }
     }
 
-    suspend fun clearLastCourse() {
-        context.dataStore.edit { it.remove(lastCourseJsonKey) }
+    suspend fun clearLastCourse(userId: Long? = null) {
+        context.dataStore.edit { prefs ->
+            if (userId != null) {
+                prefs.remove(lastCourseKey(userId))
+            } else {
+                prefs.remove(lastCourseJsonKey)
+                prefs.remove(lastCourseUserIdKey)
+            }
+        }
     }
 
     suspend fun clear() {

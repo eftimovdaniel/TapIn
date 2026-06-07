@@ -31,13 +31,20 @@ import com.tapin.teacher.ui.Paper
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoursesScreen(
+    userId: Long,
     onBack: () -> Unit,
     onCourseSelected: (CourseView) -> Unit,
-    vm: CoursesViewModel = viewModel(),
+    vm: CoursesViewModel = viewModel(key = "courses_$userId"),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     // dali e otvoren dijalogot za kreiranje nov predmet
     var showCreate by remember { mutableStateOf(false) }
+
+    // Sekogas svezi podatoci od API — posle logout/login drug prof ne smee da gi gleda
+    // predmetite od prethodniot korisnik (ViewModel moze da prezhivee vo Activity).
+    LaunchedEffect(userId) {
+        vm.refresh(forUserId = userId)
+    }
 
     Scaffold(
         containerColor = Paper,
@@ -77,7 +84,7 @@ fun CoursesScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(state.error ?: "?", color = Ink40, style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(16.dp))
-                    OutlinedButton(onClick = vm::refresh) { Text("Обиди се повторно") }
+                    OutlinedButton(onClick = { vm.refresh(forUserId = userId) }) { Text("Обиди се повторно") }
                 }
                 state.items.isEmpty() -> EmptyCourses()
                 else -> LazyColumn(

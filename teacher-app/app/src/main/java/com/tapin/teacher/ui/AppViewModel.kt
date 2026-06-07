@@ -40,11 +40,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val postLoginTarget: StateFlow<PostLoginTarget> = _postLoginTarget.asStateFlow()
 
     fun rememberCourse(course: CourseView) {
-        viewModelScope.launch { store.saveLastCourse(course) }
+        viewModelScope.launch {
+            val userId = (_state.value as? AuthState.LoggedIn)?.user?.id ?: return@launch
+            store.saveLastCourse(course, userId)
+        }
     }
 
     fun forgetLastCourse() {
-        viewModelScope.launch { store.clearLastCourse() }
+        viewModelScope.launch {
+            val userId = (_state.value as? AuthState.LoggedIn)?.user?.id ?: return@launch
+            store.clearLastCourse(userId)
+        }
     }
 
     init {
@@ -53,7 +59,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (s != null) {
                 ApiClient.setToken(s.token)
                 _state.value = AuthState.LoggedIn(s.user)
-                resolvePostLoginTarget()
+                resolvePostLoginTarget(s.user)
             } else {
                 _state.value = AuthState.LoggedOut()
                 _postLoginTarget.value = PostLoginTarget.Home
@@ -62,26 +68,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Spec 3.1.2 — po login otvori sesija (posleden predmet ili edinstven predmet). */
-    private suspend fun resolvePostLoginTarget() {
+    private suspend fun resolvePostLoginTarget(user: UserView) {
         _postLoginTarget.value = PostLoginTarget.Loading
-        store.lastCourse()?.let { saved ->
-            _postLoginTarget.value = PostLoginTarget.AttendanceSession(saved)
-            return
+
+        store.lastCourse(user.id)?.let { saved ->
+            if (saved.teacherId == user.id) {
+                _postLoginTarget.value = PostLoginTarget.AttendanceSession(saved)
+                return
+            }
+            store.clearLastCourse(user.id)
         }
+
         try {
             val courses = ApiClient.listCourses()
             when {
                 courses.isEmpty() ->
-                    // Nema predmeti → Home (profesorot prvo treba da kreira predmet)
                     _postLoginTarget.value = PostLoginTarget.Home
                 courses.size == 1 -> {
-                    store.saveLastCourse(courses.first())
+                    store.saveLastCourse(courses.first(), user.id)
                     _postLoginTarget.value = PostLoginTarget.AttendanceSession(courses.first())
                 }
                 else -> {
-                    // Pojkje predmeti i nishto zapameteno → avtomatski zemi go najnoviot
-                    // (spec 3.1.2: avtomatski aktiviraj sesija po login). Ne go pamtime
-                    // kako "posleden" za da moze profesorot da go smeni od ekranot.
                     val mostRecent = courses.maxByOrNull { it.id } ?: courses.first()
                     _postLoginTarget.value = PostLoginTarget.AttendanceSession(mostRecent)
                 }
@@ -102,8 +109,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 ApiClient.setToken(resp.token)
                 store.save(resp.token, resp.user)
+                // Ischisti legacy posleden predmet od drug profil (ako postoi)
+                store.clearLastCourse()
                 _state.value = AuthState.LoggedIn(resp.user)
-                resolvePostLoginTarget()
+                resolvePostLoginTarget(resp.user)
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
@@ -126,8 +135,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 )
                 ApiClient.setToken(resp.token)
                 store.save(resp.token, resp.user)
+                store.clearLastCourse()
                 _state.value = AuthState.LoggedIn(resp.user)
-                resolvePostLoginTarget()
+                resolvePostLoginTarget(resp.user)
             } catch (e: ApiException) {
                 _state.value = AuthState.LoggedOut(error = e.friendlyMessage)
             } catch (e: Exception) {
