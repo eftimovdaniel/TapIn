@@ -1,5 +1,4 @@
 package com.tapin.student.ui.screens
-
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
@@ -48,6 +47,7 @@ import com.tapin.student.ui.Ink60
 import com.tapin.student.ui.Paper
 import com.tapin.student.ui.Success
 
+// glaven ekran po najava — prikazhuva nfc status i potvrda/greshka pri tap
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -57,8 +57,10 @@ fun HomeScreen(
     onLogout: () -> Unit,
     homeVm: HomeViewModel = viewModel(),
 ) {
+    // nfc e podgotven samo ako e i poddrzhan i vklucen
     val nfcOk = nfcSupported && nfcEnabled
     val ctx = LocalContext.current
+    // feedback sostojba od viewmodelot — uspeh/greshka po tap
     val feedback by homeVm.feedback.collectAsStateWithLifecycle()
     val showSuccess = feedback == HomeViewModel.TapFeedbackState.SUCCESS
     val showFailure = feedback == HomeViewModel.TapFeedbackState.FAILURE
@@ -117,7 +119,7 @@ fun HomeScreen(
                     textAlign = TextAlign.Center,
                 )
 
-                // Direkten short-cut do NFC poставките koga e iskluchen (spec 9-10 NFC lifecycle)
+                // Direkten short-cut do NFC postavkite koga e iskluchen (spec 9-10 NFC lifecycle)
                 if (nfcSupported && !nfcEnabled) {
                     Spacer(Modifier.height(4.dp))
                     Button(
@@ -150,7 +152,7 @@ fun HomeScreen(
                 SuccessOverlay()
             }
 
-            // Full-screen overlay koga tapоt ne uspea (spec 3.2.4)
+            // Full-screen overlay koga tapot ne uspea (spec 3.2.4)
             AnimatedVisibility(
                 visible = showFailure,
                 enter = fadeIn() + scaleIn(initialScale = 0.85f),
@@ -163,6 +165,7 @@ fun HomeScreen(
     }
 }
 
+// zelen overlay koga tap-ot e uspeshen
 @Composable
 private fun SuccessOverlay() {
     Box(
@@ -194,6 +197,7 @@ private fun SuccessOverlay() {
     }
 }
 
+// crven overlay koga tap-ot ne uspea
 @Composable
 private fun FailureOverlay() {
     Box(
@@ -225,6 +229,7 @@ private fun FailureOverlay() {
     }
 }
 
+// kartichka so ime, email i studentski broj
 @Composable
 private fun UserCard(user: UserView) {
     Surface(color = Ink10, shape = RoundedCornerShape(20.dp),
@@ -248,6 +253,7 @@ private fun UserCard(user: UserView) {
     }
 }
 
+// animiran prsten okolu nfc ikonata — pulsiraj koga e aktivno
 @Composable
 private fun NfcRing(active: Boolean) {
     val infinite = rememberInfiniteTransition(label = "nfc")
@@ -307,6 +313,7 @@ private fun NfcRing(active: Boolean) {
     }
 }
 
+// kratok tekst kako funkcionira hce bez otvaranje na app
 @Composable
 private fun HceHint() {
     Surface(color = Ink10, shape = RoundedCornerShape(14.dp),

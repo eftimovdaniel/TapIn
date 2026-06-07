@@ -1,24 +1,15 @@
 package com.tapin.student.nfc
-
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
  * NFC payload format koe go prajka studentskata aplikacija pri tap.
  *
- * Spec 3.2.3 bara payload da sodrzi student_id + student_name → koristime v2 format:
- *
- *   v2: "v2|<studentNumber>|<studentName>|<unixSeconds>|<hmac16>"
- *       hmac16 = HMAC-SHA256(SECRET, "v2:<studentNumber>:<studentName>:<unixSeconds>")[:16]
- *
- * Stariot v1 format (bez ime) e i ponatamu validен na backend kako fallback,
- * no studentskata aplikacija sega secogash isprakja v2.
- *
- * Backend ja proveruva HMAC podpisоt + window ±60s na timestamp-ot.
- * Toa go spreчuva replay attacks (snimen NFC tag mozhe da se "playback-uje"
+ * Backend ja proveruva HMAC podpisot + window ±60s na timestamp-ot.
+ * Toa go sprechuva replay attacks (snimen NFC tag mozhe da se "playback-uje"
  * od drug ured posle nekolku sekundi → ne vazhi).
  *
- * Zaedничкi sekret e komajilan vo aplikaciite i vo backend-ot. Vo proizvodstvo
+ * Zaednichki secret e kompajliran vo aplikaciite i vo backend-ot. Vo proizvodstvo
  * bi bil rotacioniran pri sekoja nova verzija.
  */
 object SecureNfc {

@@ -1,10 +1,11 @@
 package com.tapin.student.data.api
-
 import kotlinx.serialization.Serializable
 
+// telo za najava
 @Serializable
 data class LoginRequest(val email: String, val password: String)
 
+// telo za registracija (role e STUDENT po default)
 @Serializable
 data class RegisterRequest(
     val email: String,
@@ -14,6 +15,7 @@ data class RegisterRequest(
     val studentNumber: String? = null
 )
 
+// podatoci za korisnik vrateni od backend
 @Serializable
 data class UserView(
     val id: Long,
@@ -23,6 +25,7 @@ data class UserView(
     val studentNumber: String? = null
 )
 
+// odgovor po najava/registracija — token + korisnik + rok na traene
 @Serializable
 data class AuthResponse(
     val token: String,
@@ -30,6 +33,7 @@ data class AuthResponse(
     val expiresAt: String
 )
 
+// greshka od backend; poliwata se opcionalni zavisno od izvorot
 @Serializable
 data class ApiError(
     val status: Int? = null,
@@ -38,5 +42,6 @@ data class ApiError(
     val message: String? = null,
     val error: String? = null
 ) {
+    // izberi prva dostapna poraka za prikaz na korisnikot
     fun friendly(): String = detail ?: message ?: title ?: error ?: "Unknown error"
 }

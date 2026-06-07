@@ -1,5 +1,4 @@
 package com.tapin.student.nfc
-
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
@@ -9,25 +8,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * Card-emulation service for TapIn.
- *
- * --- Protocol ---
- *   Reader (teacher app) sends:
- *     SELECT AID:  00 A4 04 00 08 F0 54 41 50 49 4E 30 31 [Le?]
- *
- *   We respond with:
- *     <ASCII student_number bytes...> 90 00      (success)
- *     90 02                                      (no student number stored — locked / logged out)
- *     6A 82                                      (file not found — wrong AID)
- *     6F 00                                      (general failure)
- *
- * The teacher app's NfcReader strips the trailing 9000 and treats the
- * remaining bytes as UTF-8 text → that becomes the student number.
- *
- * --- UI feedback ---
  *   Sekoj tap (uspeshen ili neuspeshen) se emitira na [tapEvents] SharedFlow
  *   kako [TapEvent], za UI-ot da pokaze "Запишано!" ili "Тап не успеа" pri
- *   slednoto обновуvanje na ekranot (HCE servisot raboti i koga aplikacijaata
+ *   slednoto obnovuvanje na ekranot (HCE servisot raboti i koga aplikacijata
  *   ne e otvorena).
  */
 class TapInHceService : HostApduService() {
@@ -48,20 +31,20 @@ class TapInHceService : HostApduService() {
         val number = StudentNumberStore.get(applicationContext)
         if (number.isNullOrBlank()) {
             Log.w(TAG, "SELECT received but no student number stored (logged out?)")
-            // Naseta AID se sовпадна, no nema kreditencijali → real tap failure.
+            // Nasheto AID se sovpadna, no nema kreditencijali → real tap failure.
             _tapEvents.tryEmit(TapEvent.Failure(System.currentTimeMillis(), Reason.NOT_LOGGED_IN))
             return STATUS_NOT_LOGGED_IN
         }
         val name = StudentNumberStore.getName(applicationContext)
 
-        // Sigurnosen potpisан payload (HMAC + timestamp) — sprečuva replay i
-        // edinstvenо backend-ot mozhe da go validira со споделениoт klu5.
+        // Sigurnosen potpisan payload (HMAC + timestamp) — sprechuva replay i
+        // edinstveno backend-ot mozhe da go validira so spodeleniot kluch.
         // Spec 3.2.3: payload sodrzhi student_id + student_name (v2 format).
         val signed = SecureNfc.build(number, studentName = name)
         val payload = signed.toByteArray(Charsets.UTF_8)
         Log.i(TAG, "SELECT ok → signed payload (${payload.size} bytes, hasName=${!name.isNullOrBlank()})")
 
-        // Notifyaj UI deka tapоt e uspesheн
+        // Notifyaj UI deka tapot e uspeshen
         _tapEvents.tryEmit(TapEvent.Success(System.currentTimeMillis()))
 
         return payload + STATUS_OK
@@ -122,7 +105,7 @@ class TapInHceService : HostApduService() {
     /** Pricina za neuspeshen tap — za prilagoden UI tekst. */
     enum class Reason { NOT_LOGGED_IN }
 
-    /** Rezultat od eden NFC tap protiv nastavnичкиот telefon. */
+    /** Rezultat od eden NFC tap protiv nastavnichkiot telefon. */
     sealed interface TapEvent {
         val at: Long
 

@@ -1,18 +1,10 @@
 package com.tapin.student.nfc
-
 import android.content.Context
 
-/**
- * Lightweight, synchronous store za student broj + ime — koristen od HCE.
- *
- * HCE callbacks (`processCommandApdu`) MUST return the response within a few
- * hundred milliseconds and run on the main thread. This rules out DataStore
- * (suspend) or any network call. We mirror the student number/name into plain
- * SharedPreferences whenever the user logs in / out, and read it from there
- * inside the HCE service.
- */
+// chuva broj i ime na studentot vo sharedpreferences za da gi chita hce servisot
 object StudentNumberStore {
 
+    // ime na prefs fajlot i klucevite pod koi se chuva sekoe pole
     private const val PREFS = "tapin_hce"
     private const val KEY_NUMBER = "student_number"
     private const val KEY_NAME = "student_name"
@@ -32,12 +24,14 @@ object StudentNumberStore {
         }
     }
 
+    // vrakja zachuvaniot broj na student (ili null ako nema)
     fun get(context: Context): String? =
         context.applicationContext
             .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(KEY_NUMBER, null)
             ?.takeIf { it.isNotBlank() }
 
+    // vrakja zachuvanoto ime na student (ili null ako nema)
     fun getName(context: Context): String? =
         context.applicationContext
             .getSharedPreferences(PREFS, Context.MODE_PRIVATE)

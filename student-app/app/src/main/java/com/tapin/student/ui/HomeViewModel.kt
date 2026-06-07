@@ -1,5 +1,4 @@
 package com.tapin.student.ui
-
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,17 +13,18 @@ import kotlinx.coroutines.launch
 /**
  * State holder za HomeScreen (MVVM).
  *
- * Sluzi gi [TapInHceService.tapEvents] od HCE servisot i gi pretvora vo
+ * Gi sluzi [TapInHceService.tapEvents] od HCE servisot i gi pretvora vo
  * prikazliv feedback state (uspeh/neuspeh), so avtomatsko skrivanje po 2.5s.
- * Ovaa logika porano zhiveese vo Composable-ot; sega e vo ViewModel.
  */
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
+    // sostojba na vizuelniot feedback po tap
     enum class TapFeedbackState { NONE, SUCCESS, FAILURE }
 
     private val _feedback = MutableStateFlow(TapFeedbackState.NONE)
     val feedback: StateFlow<TapFeedbackState> = _feedback.asStateFlow()
 
+    // slushaj gi tap nastanite od hce servisot i pretvori gi vo feedback
     init {
         viewModelScope.launch {
             TapInHceService.tapEvents.collect { event ->
@@ -38,6 +38,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                         _feedback.value = TapFeedbackState.FAILURE
                     }
                 }
+                // sokrij go feedbackot avtomatski po 2.5 sekundi
                 delay(2500)
                 _feedback.value = TapFeedbackState.NONE
             }

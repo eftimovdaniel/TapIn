@@ -1,5 +1,4 @@
 package com.tapin.student
-
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -40,7 +39,7 @@ class MainActivity : ComponentActivity() {
     private val nfcEnabledFlow = MutableStateFlow(false)
     private var nfcSupported = false
 
-    /** Live osvezhuvanje na NFC statusот koga korisnikот go vkluchi/iskluchi NFC. */
+    /** Live osvezhuvanje na NFC statusot koga korisnikot go vkluchi/iskluchi NFC. */
     private val nfcStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == NfcAdapter.ACTION_ADAPTER_STATE_CHANGED) {
