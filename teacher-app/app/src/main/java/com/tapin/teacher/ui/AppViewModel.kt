@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui
-
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -82,7 +81,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 else -> {
                     // Pojkje predmeti i nishto zapameteno → avtomatski zemi go najnoviot
                     // (spec 3.1.2: avtomatski aktiviraj sesija po login). Ne go pamtime
-                    // kako "posleden" za da moze profesorot da go smeni od ekranот.
+                    // kako "posleden" za da moze profesorot da go smeni od ekranot.
                     val mostRecent = courses.maxByOrNull { it.id } ?: courses.first()
                     _postLoginTarget.value = PostLoginTarget.AttendanceSession(mostRecent)
                 }

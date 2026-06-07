@@ -1,5 +1,4 @@
 package com.tapin.teacher.util
-
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -42,7 +41,7 @@ object NetworkMonitor {
             .build()
         cm.registerNetworkCallback(request, callback)
 
-        // Инициjална вредност според тековната активна мрежа.
+        // Иницијална вредност според тековната активна мрежа.
         val caps = cm.activeNetwork?.let { cm.getNetworkCapabilities(it) }
         trySend(caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true)
 

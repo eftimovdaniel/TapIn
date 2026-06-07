@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui
-
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -13,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// paleta na boi — crno/belo so nijansi sivo plus akcenti za greshka/uspeh
 val Ink     = Color(0xFF0A0A0A)
 val Ink80   = Color(0xFF171717)
 val Ink60   = Color(0xFF404040)
@@ -63,6 +63,7 @@ private val Shape = Shapes(
     extraLarge = RoundedCornerShape(20.dp)
 )
 
+// glavna tema na aplikacijata — boi, tipografija i formi okolu sodrzhinata
 @Composable
 fun TapInTheme(content: @Composable () -> Unit) {
     MaterialTheme(

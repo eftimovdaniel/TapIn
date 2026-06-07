@@ -35,8 +35,8 @@ class NfcReader(private val activity: Activity) {
          *
          *  [studentNumber] e secogash chist broj (za vizuelen feedback).
          *  [signedPayload] e celiot HMAC-potpishan string DOKOLKU studentskata
-         *  aplikacija isprаti sigurnosen format ("studentNumber|ts|hmac").
-         *  Ako e null, znachi vlегувa preku staro / NDEF / manuelno —
+         *  aplikacija isprati sigurnosen format ("studentNumber|ts|hmac").
+         *  Ako e null, znachi vleguva preku staro / NDEF / manuelno —
          *  backend ke pravi normalen lookup po broj.
          */
         data class Tapped(
@@ -112,13 +112,13 @@ class NfcReader(private val activity: Activity) {
                     )
                 )
             } else {
-                // Legacy / unsigned payload — sаmo broj
+                // Legacy / unsigned payload — samo broj
                 _events.tryEmit(Result.Tapped(raw, Result.Source.HCE))
             }
             return
         }
 
-        // 2) Try NDEF — fizichkоТ tag (bez potpis)
+        // 2) Try NDEF — fizichkiot tag (bez potpis)
         readNdef(tag)?.let {
             _events.tryEmit(Result.Tapped(it, Result.Source.NDEF))
             return

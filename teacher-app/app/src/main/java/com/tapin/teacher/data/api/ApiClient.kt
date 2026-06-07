@@ -20,20 +20,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 object ApiConfig {
-    /**
-     * BASE_URL — kade da se zakaci klientot.
-     *
-     *  Produkcija (Render):             https://tapin-n81l.onrender.com
-     *  Real telefon (Mac LAN IP):       http://192.168.0.106:8080
-     *  Android emulator na host Mac:    http://10.0.2.2:8080
-     *
-     * Smeni ja vrednosta podolu i ponovo build:
-     *   ./gradlew assembleDebug   pa   adb install -r app-debug.apk
-     *
-     * NAPOMENA: ako koristish HTTPS (Render), dodatno ne treba nishto —
-     * Android default dozvoluva HTTPS. Ako koristish HTTP (lokalno),
-     * AndroidManifest.xml ima `usesCleartextTraffic=true`.
-     */
     const val BASE_URL = "https://tapin-n81l.onrender.com"
 }
 
@@ -52,7 +38,7 @@ object ApiClient {
 
     val http: HttpClient = HttpClient(OkHttp) {
         install(ContentNegotiation) { json(json) }
-        // Strukturirano logiranje na site HTTP povici (metoda, status, traење) — za debug.
+        // Strukturirano logiranje na site HTTP povici (metoda, status, traenje) — za debug.
         install(Logging) { level = LogLevel.INFO }
         defaultRequest {
             url(ApiConfig.BASE_URL)

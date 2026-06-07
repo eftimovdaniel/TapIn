@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tapin.teacher.data.api.ApiClient
@@ -12,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// sostojba na ekranot za predmeti — lista + statusi za vchituvanje i kreiranje
 data class CoursesUiState(
     val isLoading: Boolean = true,
     val items: List<CourseView> = emptyList(),
@@ -20,13 +20,16 @@ data class CoursesUiState(
     val createError: String? = null,
 )
 
+// viewmodel za listata na predmeti i kreiranje nov predmet
 class CoursesViewModel : ViewModel() {
 
     private val _state = MutableStateFlow(CoursesUiState())
     val state: StateFlow<CoursesUiState> = _state.asStateFlow()
 
+    // pri kreiranje vedanash vchitaj gi predmetite
     init { refresh() }
 
+    // povlechi ja listata na predmeti od backend
     fun refresh() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
@@ -41,7 +44,9 @@ class CoursesViewModel : ViewModel() {
         }
     }
 
+    // kreiraj nov predmet; po uspeh go dodavame vo listata i vikame onCreated
     fun createCourse(code: String, name: String, onCreated: (CourseView) -> Unit) {
+        // prosta validacija — i shifra i ime mora da se popolneti
         if (code.isBlank() || name.isBlank()) {
             _state.update { it.copy(createError = "Пополни шифра и име") }
             return
@@ -66,6 +71,7 @@ class CoursesViewModel : ViewModel() {
         }
     }
 
+    // ischisti ja greshkata od formata za kreiranje
     fun clearCreateError() {
         _state.update { it.copy(createError = null) }
     }

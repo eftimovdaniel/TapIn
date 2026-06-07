@@ -10,12 +10,12 @@ import androidx.room.PrimaryKey
  * Zhivee samo na uredot. Sinhronizira se kon backend kade so se prajka i tamu.
  *
  * status:
- *   0 = PENDING (chekаt za sync)
+ *   0 = PENDING (cheka za sync)
  *   1 = SYNCED (uspeshno kachen)
  *   2 = REJECTED (backend ne go prifati — pr. nepoznat student)
  *
  * Zachuvuvame i `studentNumber` taka chto site posto offline tap-i mozhat
- * da se uploadат i posle koga imame net (resolve to studentId pri sync).
+ * da se uploadat i posle koga imame net (resolve to studentId pri sync).
  */
 @Entity(
     tableName = "attendance_pending",
@@ -32,7 +32,7 @@ data class AttendanceEntity(
     val studentName: String? = null,
     val tappedAtIso: String,
     /**
-     * Potpishaniot HCE payload (HMAC + timestamp), ako tapот dojde preku NFC.
+     * Potpishaniot HCE payload (HMAC + timestamp), ako tapot dojde preku NFC.
      * Se chuva za da moze offline tap-ot da se kachi so istiot bezbeden potpis
      * koga ke se vrati mrezata — bez da se gubi server-side validacijata.
      */

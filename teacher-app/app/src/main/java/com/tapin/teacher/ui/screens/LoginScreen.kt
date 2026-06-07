@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui.screens
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +21,7 @@ import com.tapin.teacher.ui.Ink40
 import com.tapin.teacher.ui.Ink60
 import com.tapin.teacher.ui.Paper
 
+// ekran za najava — polinja za e-poshta i lozinka plus link kon registracija
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -30,6 +30,7 @@ fun LoginScreen(
     error: String?,
     busy: Boolean
 ) {
+    // lokalna sostojba za vnesenite polinja
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -95,6 +96,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
+            // kopche aktivno samo koga dvete polinja se popolneti i ne sme zafateni
             Button(
                 onClick = { onLogin(email, password) },
                 enabled = !busy && email.isNotBlank() && password.isNotBlank(),
@@ -137,6 +139,7 @@ fun LoginScreen(
     }
 }
 
+// mala etiketa nad poleto za vnesuvanje
 @Composable
 internal fun FieldLabel(text: String) {
     Text(
@@ -147,6 +150,7 @@ internal fun FieldLabel(text: String) {
     )
 }
 
+// edinstven stil na tekst pole (spodeleno megju login i register), so opcija za lozinka
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WebStyleField(

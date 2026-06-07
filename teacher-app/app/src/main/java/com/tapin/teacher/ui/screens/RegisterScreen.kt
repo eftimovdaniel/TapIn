@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui.screens
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +19,7 @@ import com.tapin.teacher.ui.Ink
 import com.tapin.teacher.ui.Ink40
 import com.tapin.teacher.ui.Paper
 
+// ekran za registracija na nov profesorski profil
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
@@ -28,10 +28,12 @@ fun RegisterScreen(
     error: String?,
     busy: Boolean
 ) {
+    // lokalna sostojba za polinjata vo formata
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // prosta validacija: ime min 3 znaci, e-poshta so @, lozinka min 6 znaci
     val canSubmit = !busy && fullName.length >= 3 &&
         email.contains("@") && password.length >= 6
 

@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui.screens
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +19,7 @@ import com.tapin.teacher.ui.Ink40
 import com.tapin.teacher.ui.Ink60
 import com.tapin.teacher.ui.Paper
 
+// pocheten ekran po najava — profil, nfc status i vlez kon predmeti
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -96,8 +96,10 @@ fun HomeScreen(
     }
 }
 
+// znachka shto pokazhuva dali nfc e poddrzhan/vklucen
 @Composable
 private fun NfcStatusBadge(supported: Boolean, enabled: Boolean) {
+    // tekst i boja spored sostojbata na nfc
     val (label, sub, labelColor) = when {
         !supported -> Triple(
             "NFC не е поддржан",

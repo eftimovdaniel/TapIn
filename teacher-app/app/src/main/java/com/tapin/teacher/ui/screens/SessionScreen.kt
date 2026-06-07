@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui.screens
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -57,6 +56,7 @@ import com.tapin.teacher.util.TapFeedback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 
+// glaven ekran za sesija — slusha nfc tapovi, prikazhuva status i lista na prisustvo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(
@@ -69,6 +69,7 @@ fun SessionScreen(
     val ctx = LocalContext.current
     val app = ctx.applicationContext as android.app.Application
 
+    // viewmodel vrzan za konkretniot predmet (poseben po course.id)
     val vm: SessionViewModel = viewModel(
         key = "session-${course.id}",
         factory = viewModelFactory {
@@ -79,8 +80,10 @@ fun SessionScreen(
     )
     val state by vm.state.collectAsStateWithLifecycle()
     val pendingCount by vm.pendingCount.collectAsStateWithLifecycle()
+    // dali e otvoren dijalogot za rachno vnesuvanje broj
     var showManual by remember { mutableStateOf(false) }
 
+    // prosleduvaj gi nfc rezultatite do viewmodelot
     LaunchedEffect(nfcEvents) {
         nfcEvents.collect { vm.onNfcResult(it) }
     }
@@ -91,7 +94,7 @@ fun SessionScreen(
         if (state.session == null && !state.isStarting) vm.startSession()
     }
 
-    // Haptic + zvuk feedback koga ima нов tap
+    // haptik + zvuk feedback koga ima nov tap, pa avtomatski go chisti po 2.2s
     LaunchedEffect(state.lastTap) {
         when (val t = state.lastTap) {
             is SessionViewModel.TapEvent.Recorded -> TapFeedback.success(ctx)
@@ -150,7 +153,7 @@ fun SessionScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // Sync banner — vekje pending zapisi
+            // sync banner — prikazhi go samo ako ima pending zapisi ili sync vo tek
             if (pendingCount > 0 || state.isSyncing || state.syncMessage != null) {
                 SyncBanner(
                     pendingCount = pendingCount,
@@ -161,11 +164,14 @@ fun SessionScreen(
                 )
             }
 
+            // glaven sodrzhinski blok spored sostojbata na sesijata
             when {
+                // ushte nema sesija — kartichka za startuvanje
                 state.session == null -> StartCard(
                     isStarting = state.isStarting,
                     onStart = vm::startSession
                 )
+                // aktivna sesija — nfc prsten, status i kopcinja
                 state.isActive -> ActiveCard(
                     nfcSupported = nfcSupported,
                     nfcEnabled = nfcEnabled,
@@ -176,6 +182,7 @@ fun SessionScreen(
                     onManual = { showManual = true },
                     onClose = vm::closeSession,
                 )
+                // sesijata e zatvorena — prikazhi rezime
                 else -> ClosedCard(count = state.attendance.size)
             }
 
@@ -191,6 +198,7 @@ fun SessionScreen(
         }
     }
 
+    // dijalog za rachno vnesuvanje broj koga nfc ne e opcija
     if (showManual) {
         ManualEntryDialog(
             onDismiss = { showManual = false },
@@ -202,6 +210,7 @@ fun SessionScreen(
     }
 }
 
+// banner za zapisi shto chekaat sync; ima kopche i progres bar dodeka se kachuva
 @Composable
 private fun SyncBanner(
     pendingCount: Int,
@@ -274,6 +283,7 @@ private fun SyncBanner(
     }
 }
 
+// kartichka koga sesijata ushte ne e zapochnata, so kopche za startuvanje
 @Composable
 private fun StartCard(isStarting: Boolean, onStart: () -> Unit) {
     Surface(color = Ink10, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
@@ -312,6 +322,7 @@ private fun StartCard(isStarting: Boolean, onStart: () -> Unit) {
     }
 }
 
+// kartichka za aktivna sesija — nfc status, broj tapovi, posleden tap i kopcinja
 @Composable
 private fun ActiveCard(
     nfcSupported: Boolean,
@@ -323,8 +334,10 @@ private fun ActiveCard(
     onManual: () -> Unit,
     onClose: () -> Unit,
 ) {
+    // nfc e podgotven samo ako e i poddrzhan i vklucen
     val nfcOk = nfcSupported && nfcEnabled
 
+    // tekst i boja na statusot spored sostojbata na nfc
     val statusText = when {
         !nfcSupported -> "Телефонот не поддржува NFC"
         !nfcEnabled -> "Вклучи NFC од поставките"
@@ -407,6 +420,7 @@ private fun ActiveCard(
     }
 }
 
+// kratko rezime koga sesijata e zatvorena
 @Composable
 private fun ClosedCard(count: Int) {
     Surface(color = Ink10, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
@@ -422,6 +436,7 @@ private fun ClosedCard(count: Int) {
     }
 }
 
+// animiran prsten okolu nfc ikonata — pulsiraj koga e aktivno
 @Composable
 private fun NfcRing(active: Boolean) {
     val infinite = rememberInfiniteTransition(label = "nfc")
@@ -463,8 +478,10 @@ private fun NfcRing(active: Boolean) {
     }
 }
 
+// banner koj go prikazhuva ishodot od posledniot tap (uspeh/duplikat/greshka)
 @Composable
 private fun TapFeedbackBanner(lastTap: SessionViewModel.TapEvent?) {
+    // nema posleden tap — ostavi prazen prostor za da ne skoka layout-ot
     if (lastTap == null) {
         Spacer(Modifier.height(48.dp))
         return
@@ -510,6 +527,7 @@ private fun TapFeedbackBanner(lastTap: SessionViewModel.TapEvent?) {
     }
 }
 
+// lista na zapishani prisustva za sesijata
 @Composable
 private fun AttendanceList(items: List<AttendanceView>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -534,6 +552,7 @@ private fun AttendanceList(items: List<AttendanceView>) {
     }
 }
 
+// eden red vo listata — ime, broj na student i vreme na tap
 @Composable
 private fun AttendanceRow(a: AttendanceView) {
     Surface(color = Ink10, shape = RoundedCornerShape(10.dp),
@@ -556,6 +575,7 @@ private fun AttendanceRow(a: AttendanceView) {
     }
 }
 
+// dijalog za rachno vnesuvanje na studentski broj (fallback bez nfc)
 @Composable
 private fun ManualEntryDialog(
     onDismiss: () -> Unit,

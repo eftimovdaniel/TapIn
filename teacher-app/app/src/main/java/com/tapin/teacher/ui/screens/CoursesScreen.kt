@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui.screens
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,6 +27,7 @@ import com.tapin.teacher.ui.Ink40
 import com.tapin.teacher.ui.Ink60
 import com.tapin.teacher.ui.Paper
 
+// ekran so lista na predmeti i kopche za kreiranje nov predmet
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoursesScreen(
@@ -36,6 +36,7 @@ fun CoursesScreen(
     vm: CoursesViewModel = viewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    // dali e otvoren dijalogot za kreiranje nov predmet
     var showCreate by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -62,6 +63,7 @@ fun CoursesScreen(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
+            // prikazhi spinner / greshka / prazno / lista spored sostojbata
             when {
                 state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator(color = Ink)
@@ -108,6 +110,7 @@ fun CoursesScreen(
     }
 }
 
+// eden red vo listata na predmeti — klikaj za da otvorish sesija
 @Composable
 private fun CourseRow(course: CourseView, onClick: () -> Unit) {
     Surface(
@@ -142,6 +145,7 @@ private fun CourseRow(course: CourseView, onClick: () -> Unit) {
     }
 }
 
+// prazna sostojba koga ushte nema predmeti
 @Composable
 private fun EmptyCourses() {
     Column(
@@ -158,6 +162,7 @@ private fun EmptyCourses() {
     }
 }
 
+// dijalog so polinja za shifra i ime na nov predmet
 @Composable
 private fun CreateCourseDialog(
     busy: Boolean,

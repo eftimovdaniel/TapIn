@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
  *  1. Tap-ot vednash se vmetnuva vo Room (status = PENDING)
  *  2. Posle se obiduvame da go uploadame na server-ot
  *  3. Ako uspee → status = SYNCED
- *  4. Ako padне (mreza) → ostanuva PENDING; "Sync now" kopcheto ke probas pak
+ *  4. Ako padne (mreza) → ostanuva PENDING; "Sync now" kopcheto ke probas pak
  *  5. Ako server-ot vrati 4xx (npr. nepoznat student) → status = REJECTED
  */
 class AttendanceRepository(context: Context) {
@@ -31,12 +31,12 @@ class AttendanceRepository(context: Context) {
      * Vmetni eden NFC tap.
      *
      * Ako [signedPayload] e prosledena (od HCE servisot na studentot),
-     * backend-ot ke ja validira i ke go najde studentot — ovaa apliкacija
-     * ne treba ni da znae IDto. Toa овозможuva replay-protection и
-     * server-side autentikacija na tapот.
+     * backend-ot ke ja validira i ke go najde studentot — ovaa aplikacija
+     * ne treba ni da znae IDto. Toa ovozmozhuva replay-protection и
+     * server-side autentikacija na tapot.
      *
      * Ako [signedPayload] ne postoi (rachno vnesuvanje), frlame student-by-number
-     * lookup ушte na klient.
+     * lookup ushte na klient.
      */
     suspend fun recordTap(
         sessionId: Long,
@@ -147,7 +147,7 @@ class AttendanceRepository(context: Context) {
 
         bySession.forEach { (sessionId, list) ->
             // Izgradi TapRecord za sekoj pending zapis.
-            //  - ako ima signedPayload (NFC tap) → go pratame potpisот direktno,
+            //  - ako ima signedPayload (NFC tap) → go pratame potpisot direktno,
             //    serverot validira HMAC + ja naoga studentskata smetka (bez lookup)
             //  - inaku (rachno vnesuvanje) → resolve student number → id
             val records = mutableListOf<Pair<AttendanceEntity, TapRecord>>()

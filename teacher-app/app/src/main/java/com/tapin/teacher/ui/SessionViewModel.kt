@@ -1,5 +1,4 @@
 package com.tapin.teacher.ui
-
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -76,7 +75,7 @@ class SessionViewModel(
 
     /**
      * Avtomatska sinhronizacija: koga mrezata ke se vrati i ima PENDING
-     * zapisi, avtomatski gi kaчuva (spec 3.1 — upload when connection
+     * zapisi, avtomatski gi kachuva (spec 3.1 — upload when connection
      * is re-established). Korisnikot moze i rachno preku "Sync now".
      */
     private fun observeNetworkForAutoSync() {
@@ -170,7 +169,7 @@ class SessionViewModel(
         if (_state.value.tapBusy) return
 
         // Time-based debounce: ignoriraj brzi povtoreni tap-i od ist student
-        // (npr. telefonот sluchajno dopre dvapati za kuso vreme).
+        // (npr. telefonot sluchajno dopre dvapati za kuso vreme).
         val now = System.currentTimeMillis()
         val prev = lastTapAtMs[studentNumber]
         if (prev != null && now - prev < tapDebounceMs) return
