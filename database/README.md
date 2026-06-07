@@ -10,13 +10,18 @@ Bazata e **prazna** — nema demo podatoci. Korisnicite se registriraat preku ap
 
 ## Connection za backend
 
-**Settings → Database → Connection string → JDBC**
+Backend-ot (FastAPI + SQLAlchemy/psycopg) chita edna `DATABASE_URL` env varijabla.
+
+**Settings → Database → Connection string → URI** (psycopg/SQLAlchemy format)
 
 Vo `backend/.env`:
 ```env
-SPRING_DATASOURCE_URL=jdbc:postgresql://db.xxxxx.supabase.co:5432/postgres?sslmode=require
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=tvojot_password
+DATABASE_URL=postgresql+psycopg://postgres:tvojot_password@db.xxxxx.supabase.co:5432/postgres?sslmode=require
+JWT_SECRET=nekoj_dolg_random_string
+# Opcionalno:
+# JWT_TTL_HOURS=24
+# NFC_SHARED_SECRET=TAPIN_NFC_SECRET_v1_2026   # mora da e ist so studentskata app
+# PORT=8080
 ```
 
 ## Registracija

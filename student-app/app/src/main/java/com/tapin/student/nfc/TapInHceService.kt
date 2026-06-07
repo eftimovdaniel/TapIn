@@ -25,9 +25,10 @@ import kotlinx.coroutines.flow.asSharedFlow
  * remaining bytes as UTF-8 text → that becomes the student number.
  *
  * --- UI feedback ---
- *   Sekoj uspesh tap se emitira na [tapEvents] SharedFlow,
- *   za UI-ot da pokaze "Запишано!" pri slednoto обновуvanje na ekranot
- *   (HCE servisot raboti i koga aplikacijaata ne e otvorena).
+ *   Sekoj tap (uspeshen ili neuspeshen) se emitira na [tapEvents] SharedFlow
+ *   kako [TapEvent], za UI-ot da pokaze "Запишано!" ili "Тап не успеа" pri
+ *   slednoto обновуvanje na ekranot (HCE servisot raboti i koga aplikacijaata
+ *   ne e otvorena).
  */
 class TapInHceService : HostApduService() {
 
@@ -47,6 +48,8 @@ class TapInHceService : HostApduService() {
         val number = StudentNumberStore.get(applicationContext)
         if (number.isNullOrBlank()) {
             Log.w(TAG, "SELECT received but no student number stored (logged out?)")
+            // Naseta AID se sовпадна, no nema kreditencijali → real tap failure.
+            _tapEvents.tryEmit(TapEvent.Failure(System.currentTimeMillis(), Reason.NOT_LOGGED_IN))
             return STATUS_NOT_LOGGED_IN
         }
         val name = StudentNumberStore.getName(applicationContext)
@@ -59,7 +62,7 @@ class TapInHceService : HostApduService() {
         Log.i(TAG, "SELECT ok → signed payload (${payload.size} bytes, hasName=${!name.isNullOrBlank()})")
 
         // Notifyaj UI deka tapоt e uspesheн
-        _tapEvents.tryEmit(System.currentTimeMillis())
+        _tapEvents.tryEmit(TapEvent.Success(System.currentTimeMillis()))
 
         return payload + STATUS_OK
     }
@@ -107,12 +110,23 @@ class TapInHceService : HostApduService() {
         private val STATUS_FILE_NOT_FOUND= byteArrayOf(0x6A.toByte(), 0x82.toByte())
         private val STATUS_FAILURE       = byteArrayOf(0x6F.toByte(), 0x00)
 
-        /** Emitira timestamp ms koga uspeshno e ispraten potpis (HCE → UI). */
-        private val _tapEvents = MutableSharedFlow<Long>(
+        /** Emitira [TapEvent] (uspeh ili neuspeh) od HCE → UI. */
+        private val _tapEvents = MutableSharedFlow<TapEvent>(
             replay = 1,
             extraBufferCapacity = 4,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
-        val tapEvents: SharedFlow<Long> = _tapEvents.asSharedFlow()
+        val tapEvents: SharedFlow<TapEvent> = _tapEvents.asSharedFlow()
+    }
+
+    /** Pricina za neuspeshen tap — za prilagoden UI tekst. */
+    enum class Reason { NOT_LOGGED_IN }
+
+    /** Rezultat od eden NFC tap protiv nastavnичкиот telefon. */
+    sealed interface TapEvent {
+        val at: Long
+
+        data class Success(override val at: Long) : TapEvent
+        data class Failure(override val at: Long, val reason: Reason) : TapEvent
     }
 }

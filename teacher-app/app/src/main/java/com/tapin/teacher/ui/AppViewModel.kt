@@ -71,11 +71,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         try {
             val courses = ApiClient.listCourses()
-            if (courses.size == 1) {
-                store.saveLastCourse(courses.first())
-                _postLoginTarget.value = PostLoginTarget.AttendanceSession(courses.first())
-            } else {
-                _postLoginTarget.value = PostLoginTarget.Home
+            when {
+                courses.isEmpty() ->
+                    // Nema predmeti → Home (profesorot prvo treba da kreira predmet)
+                    _postLoginTarget.value = PostLoginTarget.Home
+                courses.size == 1 -> {
+                    store.saveLastCourse(courses.first())
+                    _postLoginTarget.value = PostLoginTarget.AttendanceSession(courses.first())
+                }
+                else -> {
+                    // Pojkje predmeti i nishto zapameteno → avtomatski zemi go najnoviot
+                    // (spec 3.1.2: avtomatski aktiviraj sesija po login). Ne go pamtime
+                    // kako "posleden" za da moze profesorot da go smeni od ekranот.
+                    val mostRecent = courses.maxByOrNull { it.id } ?: courses.first()
+                    _postLoginTarget.value = PostLoginTarget.AttendanceSession(mostRecent)
+                }
             }
         } catch (_: Exception) {
             _postLoginTarget.value = PostLoginTarget.Home

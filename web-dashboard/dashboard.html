@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TapIn — Контролна табла</title>
-    <link rel="icon" type="image/png" href="./assets/logo.png" />
+    <link rel="icon" type="image/svg+xml" href="./assets/logo.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -34,14 +34,14 @@
     <header class="sticky top-0 z-10 border-b border-ink-20 bg-white/85 backdrop-blur">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <div class="flex items-center gap-3">
-          <img src="./assets/logo.png" alt="TapIn" class="h-12 w-auto object-contain" />
+          <img src="./assets/logo.svg" alt="TapIn" class="h-12 w-auto object-contain" />
           <span class="hidden text-xs text-ink-40 md:inline">Контролна табла</span>
         </div>
 
         <div class="flex items-center gap-3">
           <div class="hidden text-right md:block">
             <div id="userName" class="text-sm font-medium leading-tight">—</div>
-            <div class="text-[11px] leading-tight text-ink-40">Професор</div>
+            <div id="userRole" class="text-[11px] leading-tight text-ink-40">—</div>
           </div>
           <button
             id="logout"
@@ -57,7 +57,7 @@
       <!-- Page header -->
       <div>
         <h1 class="font-display text-2xl font-bold tracking-tight">Преглед</h1>
-        <p class="mt-1 text-sm text-ink-40">Статистики и евиденција на присуство во реално време.</p>
+        <p id="pageSubtitle" class="mt-1 text-sm text-ink-40">Статистики и евиденција на присуство во реално време.</p>
       </div>
 
       <!-- Stat cards -->
@@ -121,6 +121,19 @@
         </div>
       </section>
 
+      <!-- Скорешни присуства (последни 5) -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="font-display text-base font-semibold">Скорешни присуства</h2>
+            <p class="mt-0.5 text-xs text-ink-40">Последните 5 регистрирани тапови.</p>
+          </div>
+        </div>
+        <ul id="recentList" class="mt-4 divide-y divide-ink-10">
+          <li class="py-3 text-center text-ink-40">Вчитување…</li>
+        </ul>
+      </section>
+
       <!-- Per-student attendance rate -->
       <section class="card">
         <div class="card-header flex-wrap gap-3">
@@ -178,7 +191,7 @@
                 <th class="px-3 py-2.5">Студент</th>
                 <th class="px-3 py-2.5">Број</th>
                 <th class="px-3 py-2.5">Предмет</th>
-                <th class="px-3 py-2.5">Професор</th>
+                <th class="col-teacher px-3 py-2.5">Професор</th>
               </tr>
             </thead>
             <tbody id="tbody" class="divide-y divide-ink-10">

@@ -10,6 +10,7 @@ import com.tapin.teacher.data.api.AttendanceView
 import com.tapin.teacher.data.api.CourseView
 import com.tapin.teacher.data.api.SessionView
 import com.tapin.teacher.nfc.NfcReader
+import com.tapin.teacher.util.NetworkMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -61,9 +62,35 @@ class SessionViewModel(
     private val _state = MutableStateFlow(UiState(course = course))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    /** Vreme na posleden tap po student-broj — za debounce na brzi povtoreni tap-i. */
+    private val lastTapAtMs = mutableMapOf<String, Long>()
+    private val tapDebounceMs = 3000L
+
     /** Pending broj — koristi vo UI badge. */
     val pendingCount: StateFlow<Int> = repo.pendingCount()
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    init {
+        observeNetworkForAutoSync()
+    }
+
+    /**
+     * Avtomatska sinhronizacija: koga mrezata ke se vrati i ima PENDING
+     * zapisi, avtomatski gi kaчuva (spec 3.1 — upload when connection
+     * is re-established). Korisnikot moze i rachno preku "Sync now".
+     */
+    private fun observeNetworkForAutoSync() {
+        viewModelScope.launch {
+            var wasOnline = true
+            NetworkMonitor.isOnlineFlow(getApplication()).collect { online ->
+                val cameBackOnline = online && !wasOnline
+                wasOnline = online
+                if (cameBackOnline && pendingCount.value > 0 && !_state.value.isSyncing) {
+                    syncPending(auto = true)
+                }
+            }
+        }
+    }
 
     fun startSession() {
         if (_state.value.session != null) return
@@ -141,6 +168,14 @@ class SessionViewModel(
         val s = _state.value.session ?: return
         if (!s.active) return
         if (_state.value.tapBusy) return
+
+        // Time-based debounce: ignoriraj brzi povtoreni tap-i od ist student
+        // (npr. telefonот sluchajno dopre dvapati za kuso vreme).
+        val now = System.currentTimeMillis()
+        val prev = lastTapAtMs[studentNumber]
+        if (prev != null && now - prev < tapDebounceMs) return
+        lastTapAtMs[studentNumber] = now
+
         _state.update { it.copy(tapBusy = true) }
 
         viewModelScope.launch {
@@ -162,8 +197,11 @@ class SessionViewModel(
         }
     }
 
-    /** Manuelen "Sync now" — proba pak da gi kachi site PENDING zapisi. */
-    fun syncPending() {
+    /**
+     * "Sync now" — proba pak da gi kachi site PENDING zapisi.
+     * [auto] = true koga e povikano avtomatski po vrakanje na mreza.
+     */
+    fun syncPending(auto: Boolean = false) {
         if (_state.value.isSyncing) return
         _state.update { it.copy(isSyncing = true, syncMessage = null, syncProgress = 0 to 0) }
         viewModelScope.launch {
@@ -171,7 +209,8 @@ class SessionViewModel(
                 val result = repo.syncPending { done, total ->
                     _state.update { it.copy(syncProgress = done to total) }
                 }
-                val msg = buildString {
+                val prefix = if (auto) "Авто-синхронизација · " else ""
+                val msg = prefix + buildString {
                     if (result.synced > 0) append("Синхронизирани: ${result.synced}")
                     if (result.rejected > 0) {
                         if (isNotEmpty()) append(" · ")

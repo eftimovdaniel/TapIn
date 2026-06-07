@@ -2,9 +2,33 @@ import { api, auth } from "./api.js";
 
 if (!auth.isLoggedIn()) location.href = "./index.html";
 
-// ── Top bar ──────────────────────────────────────────────
+// ── Top bar + role-based scope (RBAC) ────────────────────
 const user = auth.user();
+const isAdmin = user?.role === "ADMIN";
 document.getElementById("userName").textContent = user?.fullName || "—";
+
+// Prikazi ja ulogata + opsegot na podatoci (admin gleda se, profesor samo svoi)
+const roleEl = document.getElementById("userRole");
+if (roleEl) {
+  roleEl.textContent = isAdmin
+    ? "Администратор · сите предмети"
+    : "Професор · мои предмети";
+}
+
+// Page subtitle reflektira RBAC opseg
+const subtitleEl = document.getElementById("pageSubtitle");
+if (subtitleEl) {
+  subtitleEl.textContent = isAdmin
+    ? "Статистики и евиденција за сите предмети и професори."
+    : "Статистики и евиденција за твоите предмети.";
+}
+
+// Kolonata "Професор" vo tabelata e relevantna samo za admin (profesorot e sekogash toj).
+// Klasata na <body> e otporna na re-render na tabelata (CSS skriva .col-teacher).
+if (!isAdmin) {
+  document.body.classList.add("role-teacher");
+}
+
 document.getElementById("logout").addEventListener("click", () => {
   auth.clear();
   location.href = "./index.html";
@@ -219,7 +243,7 @@ function renderTable() {
           <td class="px-3 py-3 font-medium">${escapeHtml(a.studentName)}</td>
           <td class="px-3 py-3 font-mono text-xs text-ink-60">${escapeHtml(a.studentNumber || "—")}</td>
           <td class="px-3 py-3">${escapeHtml(a.courseName)}</td>
-          <td class="px-3 py-3 text-ink-60">${escapeHtml(a.teacherName)}</td>
+          <td class="col-teacher px-3 py-3 text-ink-60">${escapeHtml(a.teacherName)}</td>
         </tr>`,
       )
       .join("");
@@ -367,6 +391,34 @@ async function loadPerStudent() {
 
 studentCourseFilter.addEventListener("change", loadPerStudent);
 
+// ── Скорешни присуства (последни 5) ──────────────────────
+const recentList = document.getElementById("recentList");
+
+async function loadRecent() {
+  try {
+    const data = await api.listAttendance({ page: 0, size: 5 });
+    const items = data.items || [];
+    if (items.length === 0) {
+      recentList.innerHTML = `<li class="py-3 text-center text-ink-40">Сè уште нема присуства.</li>`;
+      return;
+    }
+    recentList.innerHTML = items
+      .map(
+        (a) => `
+        <li class="flex items-center justify-between gap-3 py-3">
+          <div class="min-w-0">
+            <div class="truncate font-medium text-ink">${escapeHtml(a.studentName)}</div>
+            <div class="truncate text-xs text-ink-40">${escapeHtml(a.courseName)}</div>
+          </div>
+          <div class="shrink-0 font-mono text-xs text-ink-60">${escapeHtml(fmtDateTime(a.tappedAt))}</div>
+        </li>`,
+      )
+      .join("");
+  } catch (e) {
+    recentList.innerHTML = `<li class="py-3 text-center text-danger">${escapeHtml(e.message || "Грешка")}</li>`;
+  }
+}
+
 // ── Kick off ─────────────────────────────────────────────
 async function bootstrap() {
   await loadCourses();
@@ -377,6 +429,7 @@ async function bootstrap() {
   loadStatistics(30);
   loadAttendance();
   loadPerStudent();
+  loadRecent();
 }
 bootstrap();
 
@@ -392,6 +445,7 @@ async function liveRefresh() {
     if (total > lastTotal && lastTotal > 0) {
       // ima nov zapis — osveжи + indikatorот
       await loadAttendance();
+      loadRecent();
       pulseFirstRow();
     }
     lastTotal = total;

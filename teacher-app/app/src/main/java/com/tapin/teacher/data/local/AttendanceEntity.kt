@@ -31,6 +31,12 @@ data class AttendanceEntity(
     val studentNumber: String,
     val studentName: String? = null,
     val tappedAtIso: String,
+    /**
+     * Potpishaniot HCE payload (HMAC + timestamp), ako tapот dojde preku NFC.
+     * Se chuva za da moze offline tap-ot da se kachi so istiot bezbeden potpis
+     * koga ke se vrati mrezata — bez da se gubi server-side validacijata.
+     */
+    val signedPayload: String? = null,
     val status: Int = STATUS_PENDING,
     val lastError: String? = null,
     val attempts: Int = 0,

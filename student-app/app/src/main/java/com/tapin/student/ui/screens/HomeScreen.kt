@@ -1,5 +1,7 @@
 package com.tapin.student.ui.screens
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
@@ -18,15 +20,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,8 +36,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tapin.student.data.api.UserView
-import com.tapin.student.nfc.TapInHceService
+import com.tapin.student.ui.HomeViewModel
 import com.tapin.student.ui.Danger
 import com.tapin.student.ui.Ink
 import com.tapin.student.ui.Ink10
@@ -46,8 +47,6 @@ import com.tapin.student.ui.Ink40
 import com.tapin.student.ui.Ink60
 import com.tapin.student.ui.Paper
 import com.tapin.student.ui.Success
-import com.tapin.student.util.TapFeedback
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,20 +55,13 @@ fun HomeScreen(
     nfcSupported: Boolean,
     nfcEnabled: Boolean,
     onLogout: () -> Unit,
+    homeVm: HomeViewModel = viewModel(),
 ) {
     val nfcOk = nfcSupported && nfcEnabled
     val ctx = LocalContext.current
-    var showSuccess by remember { mutableStateOf(false) }
-
-    // Slushaj uspeshni HCE tap-i emitirani od TapInHceService
-    LaunchedEffect(Unit) {
-        TapInHceService.tapEvents.collect {
-            TapFeedback.success(ctx)
-            showSuccess = true
-            delay(2500)
-            showSuccess = false
-        }
-    }
+    val feedback by homeVm.feedback.collectAsStateWithLifecycle()
+    val showSuccess = feedback == HomeViewModel.TapFeedbackState.SUCCESS
+    val showFailure = feedback == HomeViewModel.TapFeedbackState.FAILURE
 
     Scaffold(
         containerColor = Paper,
@@ -125,6 +117,22 @@ fun HomeScreen(
                     textAlign = TextAlign.Center,
                 )
 
+                // Direkten short-cut do NFC poставките koga e iskluchen (spec 9-10 NFC lifecycle)
+                if (nfcSupported && !nfcEnabled) {
+                    Spacer(Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            runCatching {
+                                ctx.startActivity(Intent(Settings.ACTION_NFC_SETTINGS))
+                            }.onFailure {
+                                ctx.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+                            }
+                        }
+                    ) {
+                        Text("Отвори NFC поставки")
+                    }
+                }
+
                 Spacer(Modifier.weight(1f))
 
                 HceHint()
@@ -140,6 +148,16 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 SuccessOverlay()
+            }
+
+            // Full-screen overlay koga tapоt ne uspea (spec 3.2.4)
+            AnimatedVisibility(
+                visible = showFailure,
+                enter = fadeIn() + scaleIn(initialScale = 0.85f),
+                exit = fadeOut() + scaleOut(targetScale = 0.9f),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                FailureOverlay()
             }
         }
     }
@@ -168,6 +186,37 @@ private fun SuccessOverlay() {
             )
             Text(
                 "Присуството е успешно регистрирано",
+                color = Paper.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FailureOverlay() {
+    Box(
+        Modifier.fillMaxSize().background(Danger.copy(alpha = 0.96f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Icon(
+                Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = Paper,
+                modifier = Modifier.size(140.dp)
+            )
+            Text(
+                "Тап не успеа",
+                color = Paper,
+                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Text(
+                "Најави се и обиди се повторно.",
                 color = Paper.copy(alpha = 0.9f),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,

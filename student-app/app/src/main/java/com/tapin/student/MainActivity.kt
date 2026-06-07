@@ -1,6 +1,11 @@
 package com.tapin.student
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.nfc.NfcAdapter
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -35,6 +40,16 @@ class MainActivity : ComponentActivity() {
     private val nfcEnabledFlow = MutableStateFlow(false)
     private var nfcSupported = false
 
+    /** Live osvezhuvanje na NFC statusот koga korisnikот go vkluchi/iskluchi NFC. */
+    private val nfcStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == NfcAdapter.ACTION_ADAPTER_STATE_CHANGED) {
+                val state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, NfcAdapter.STATE_OFF)
+                nfcEnabledFlow.value = state == NfcAdapter.STATE_ON
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val adapter = NfcAdapter.getDefaultAdapter(this)
@@ -48,6 +63,19 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         val adapter = NfcAdapter.getDefaultAdapter(this)
         nfcEnabledFlow.value = adapter?.isEnabled == true
+
+        val filter = IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(nfcStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(nfcStateReceiver, filter)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        runCatching { unregisterReceiver(nfcStateReceiver) }
     }
 }
 

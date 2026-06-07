@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Заоблен црн квадрат -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:pathData="M20,4 L76,4 A16,16 0 0 1 92,20 L92,76 A16,16 0 0 1 76,92 L20,92 A16,16 0 0 1 4,76 L4,20 A16,16 0 0 1 20,4 Z" />
+
+    <!-- NFC бранови -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M42,28 A26,26 0 0 1 42,68"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,22 A36,36 0 0 1 54,74"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+
+    <!-- Точка (тап) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,48 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+</vector>

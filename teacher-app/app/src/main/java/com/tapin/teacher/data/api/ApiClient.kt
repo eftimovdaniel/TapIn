@@ -5,6 +5,8 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -50,6 +52,8 @@ object ApiClient {
 
     val http: HttpClient = HttpClient(OkHttp) {
         install(ContentNegotiation) { json(json) }
+        // Strukturirano logiranje na site HTTP povici (metoda, status, traење) — za debug.
+        install(Logging) { level = LogLevel.INFO }
         defaultRequest {
             url(ApiConfig.BASE_URL)
             contentType(ContentType.Application.Json)

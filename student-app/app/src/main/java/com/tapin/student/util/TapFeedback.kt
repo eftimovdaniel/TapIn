@@ -34,4 +34,19 @@ object TapFeedback {
             tone.startTone(ToneGenerator.TONE_PROP_ACK, 200)
         }
     }
+
+    fun failure(ctx: Context) {
+        vibrator(ctx)?.let { v ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // podolga edinечна vibracija — distinktiven "greshka" feedback
+                v.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION") v.vibrate(300)
+            }
+        }
+        runCatching {
+            val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80)
+            tone.startTone(ToneGenerator.TONE_SUP_ERROR, 350)
+        }
+    }
 }

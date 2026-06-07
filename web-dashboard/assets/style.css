@@ -104,6 +104,13 @@ tbody tr.row-pulse {
   animation: row-pulse 2200ms ease-out;
 }
 
+/* ─────────── RBAC — opseg po uloga ───────────
+   Profesor gleda samo svoi predmeti, pa kolonata "Професор" e izlišна
+   i se skriva. Admin (bez .role-teacher na <body>) ja gleda.            */
+body.role-teacher .col-teacher {
+  display: none;
+}
+
 /* ─────────── Responsive — mobil ───────────
    Tailwind klasata `grid-cols-2` na stat-карди gi dr5i во 2 kolони
    na mobil; ovde pravime tipografski adapteр+ shrink na zaglавija.    */

@@ -51,6 +51,7 @@ class AttendanceRepository(context: Context) {
                 studentNumber = studentNumber,
                 studentName = studentName,
                 tappedAtIso = tappedAtIso,
+                signedPayload = signedPayload,
             )
         )
 
@@ -145,12 +146,20 @@ class AttendanceRepository(context: Context) {
         var processed = 0
 
         bySession.forEach { (sessionId, list) ->
-            // resolve student numbers → ids
-            val records = mutableListOf<Pair<AttendanceEntity, Long>>()
+            // Izgradi TapRecord za sekoj pending zapis.
+            //  - ako ima signedPayload (NFC tap) → go pratame potpisот direktno,
+            //    serverot validira HMAC + ja naoga studentskata smetka (bez lookup)
+            //  - inaku (rachno vnesuvanje) → resolve student number → id
+            val records = mutableListOf<Pair<AttendanceEntity, TapRecord>>()
             for (e in list) {
+                val signed = e.signedPayload
+                if (!signed.isNullOrBlank()) {
+                    records += e to TapRecord(signedPayload = signed, tappedAt = e.tappedAtIso)
+                    continue
+                }
                 try {
                     val s = ApiClient.findStudentByNumber(e.studentNumber)
-                    records += e to s.id
+                    records += e to TapRecord(studentId = s.id, tappedAt = e.tappedAtIso)
                 } catch (ex: ApiException) {
                     if (ex.statusCode == 404) {
                         dao.markRejected(e.localId, "Студентот не е најден")
@@ -173,9 +182,7 @@ class AttendanceRepository(context: Context) {
                 ApiClient.uploadAttendance(
                     BulkAttendanceRequest(
                         sessionId = sessionId,
-                        records = records.map { (e, id) ->
-                            TapRecord(studentId = id, tappedAt = e.tappedAtIso)
-                        }
+                        records = records.map { (_, record) -> record }
                     )
                 )
                 // server prifaki ili otfri po sila — markirame site kako synced/duplicate
