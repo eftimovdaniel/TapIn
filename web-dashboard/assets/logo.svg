@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="TapIn">
-  <path fill="#0A0A0A" d="M20,4 L76,4 A16,16 0 0 1 92,20 L92,76 A16,16 0 0 1 76,92 L20,92 A16,16 0 0 1 4,76 L4,20 A16,16 0 0 1 20,4 Z"/>
-  <path fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" d="M42,28 A26,26 0 0 1 42,68"/>
-  <path fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" d="M54,22 A36,36 0 0 1 54,74"/>
-  <circle cx="30" cy="48" r="7" fill="#ffffff"/>
-</svg>
