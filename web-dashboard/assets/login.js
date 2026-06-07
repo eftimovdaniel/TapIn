@@ -1,4 +1,7 @@
 import { api, auth } from "./api.js";
+import { initPasswordToggles } from "./password-toggle.js";
+
+initPasswordToggles();
 
 // Ako ima token, proveri dali e validen — inaku izbrishi go
 if (auth.isLoggedIn()) {

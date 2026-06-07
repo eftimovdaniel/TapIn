@@ -111,6 +111,35 @@ body.role-teacher .col-teacher {
   display: none;
 }
 
+/* ─────────── Password show/hide toggle ─────────── */
+.password-field {
+  position: relative;
+}
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+.password-toggle:hover {
+  opacity: 1;
+}
+.password-toggle img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
 /* ─────────── Responsive — mobil ───────────
    Tailwind klasata `grid-cols-2` na stat-карди gi dr5i во 2 kolони
    na mobil; ovde pravime tipografski adapteр+ shrink na zaglавija.    */

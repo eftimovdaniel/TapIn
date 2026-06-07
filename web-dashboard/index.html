@@ -60,13 +60,29 @@
 
         <div>
           <label for="password" class="mb-1.5 block text-xs font-medium text-ink-60">Лозинка</label>
-          <input
-            id="password"
-            type="password"
-            required
-            autocomplete="current-password"
-            class="w-full rounded-lg border border-ink-20 bg-white px-3.5 py-2.5 text-sm text-ink focus:border-ink focus:ring-2 focus:ring-ink-10 focus:outline-none"
-          />
+          <div class="password-field">
+            <input
+              id="password"
+              type="password"
+              required
+              autocomplete="current-password"
+              class="w-full rounded-lg border border-ink-20 bg-white py-2.5 pl-3.5 pr-11 text-sm text-ink focus:border-ink focus:ring-2 focus:ring-ink-10 focus:outline-none"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              data-password-toggle
+              aria-controls="password"
+              aria-label="Покажи лозинка"
+            >
+              <img
+                src="https://img.icons8.com/ios/50/closed-eye.png"
+                alt=""
+                width="20"
+                height="20"
+              />
+            </button>
+          </div>
         </div>
 
         <p id="error" class="hidden text-sm text-danger"></p>

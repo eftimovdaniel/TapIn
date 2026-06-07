@@ -155,6 +155,8 @@ export const api = {
 
   // Courses
   listCourses: () => call("/api/courses"),
+  createCourse: ({ code, name }) =>
+    call("/api/courses", { method: "POST", body: { code, name } }),
 };
 
 export { ApiError };

@@ -1,4 +1,7 @@
 import { api, auth } from "./api.js";
+import { initPasswordToggles } from "./password-toggle.js";
+
+initPasswordToggles();
 
 if (auth.isLoggedIn()) {
   location.href = "./dashboard.html";

@@ -173,21 +173,81 @@ document.getElementById("trendDays").addEventListener("change", (e) => {
   loadStatistics(parseInt(e.target.value, 10));
 });
 
-// ── Courses za filterot ──────────────────────────────────
+// ── Courses: filter dropdowns + tabela "Мои предмети" ────
+const courseTbody = document.getElementById("courseTbody");
+
+function fillCourseDropdown(sel, courses) {
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="">Сите предмети</option>`;
+  courses.forEach((c) => {
+    const o = document.createElement("option");
+    o.value = c.id;
+    o.textContent = `${c.code} · ${c.name}`;
+    sel.appendChild(o);
+  });
+  sel.value = current;
+}
+
+function renderCourseTable(courses) {
+  if (!courseTbody) return;
+  if (!courses || courses.length === 0) {
+    courseTbody.innerHTML = `<tr><td colspan="3" class="px-3 py-8 text-center text-ink-40">Сè уште немаш предмети. Додај го првиот погоре.</td></tr>`;
+    return;
+  }
+  courseTbody.innerHTML = courses
+    .map(
+      (c) => `
+        <tr class="text-ink">
+          <td class="px-3 py-3 font-mono text-xs text-ink-60">${escapeHtml(c.code)}</td>
+          <td class="px-3 py-3 font-medium">${escapeHtml(c.name)}</td>
+          <td class="col-teacher px-3 py-3 text-ink-60">${escapeHtml(c.teacherName)}</td>
+        </tr>`,
+    )
+    .join("");
+}
+
 async function loadCourses() {
   try {
     const courses = await api.listCourses();
-    const sel = document.getElementById("filterCourse");
-    courses.forEach((c) => {
-      const o = document.createElement("option");
-      o.value = c.id;
-      o.textContent = `${c.code} · ${c.name}`;
-      sel.appendChild(o);
-    });
+    fillCourseDropdown(document.getElementById("filterCourse"), courses);
+    fillCourseDropdown(studentCourseFilter, courses);
+    renderCourseTable(courses);
   } catch (e) {
     console.error(e);
+    if (courseTbody) {
+      courseTbody.innerHTML = `<tr><td colspan="3" class="px-3 py-8 text-center text-danger">${escapeHtml(e.message || "Грешка")}</td></tr>`;
+    }
   }
 }
+
+// ── Креирање нов предмет ─────────────────────────────────
+const courseForm = document.getElementById("courseForm");
+const courseCodeEl = document.getElementById("courseCode");
+const courseNameEl = document.getElementById("courseName");
+const courseSubmitEl = document.getElementById("courseSubmit");
+const courseErrorEl = document.getElementById("courseError");
+
+courseForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  courseErrorEl.classList.add("hidden");
+  const code = courseCodeEl.value.trim();
+  const name = courseNameEl.value.trim();
+  if (!code || !name) return;
+
+  courseSubmitEl.disabled = true;
+  try {
+    await api.createCourse({ code, name });
+    courseCodeEl.value = "";
+    courseNameEl.value = "";
+    await loadCourses();
+  } catch (err) {
+    courseErrorEl.textContent = err.message || "Неуспешно креирање предмет";
+    courseErrorEl.classList.remove("hidden");
+  } finally {
+    courseSubmitEl.disabled = false;
+  }
+});
 
 // ── Tabela na atendansi so paginacija + filteri ──────────
 const tbody = document.getElementById("tbody");
@@ -421,10 +481,8 @@ async function loadRecent() {
 
 // ── Kick off ─────────────────────────────────────────────
 async function bootstrap() {
+  // loadCourses gi polni i dvata dropdown-a (filter + per-student) i tabelata
   await loadCourses();
-  // Klonira opciите od courseFilter vo studentCourseFilter
-  const src = document.getElementById("filterCourse");
-  studentCourseFilter.innerHTML = src.innerHTML;
 
   loadStatistics(30);
   loadAttendance();
