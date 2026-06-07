@@ -76,31 +76,6 @@
 
 ---
 
-## Структура на проектот
-
-```
-Mobilniaplikacii-grupna/
-├── database/         ← PostgreSQL schema (Supabase)
-│   └── schema.sql
-├── backend/          ← Python / FastAPI REST API
-│   ├── main.py           # почетна точка, рутери, хостирање на дашборд
-│   ├── config.py         # .env конфигурација (DB, JWT, NFC secret)
-│   ├── db.py             # SQLAlchemy engine + session
-│   ├── models.py         # ORM модели (User, Course, Session, Attendance…)
-│   ├── schemas.py        # Pydantic request/response шеми
-│   ├── security.py       # bcrypt + JWT
-│   ├── secure_nfc.py     # валидација на потпишани NFC payloads (HMAC)
-│   ├── deps.py           # auth dependencies (Bearer token, role checks)
-│   ├── seed_demo.py      # демо податоци за презентација
-│   ├── routers/          # auth, courses, sessions, attendance, statistics
-│   └── tests/            # pytest (in-memory SQLite)
-├── teacher-app/      ← Android (Kotlin + Compose) — чита NFC tap
-├── student-app/      ← Android (Kotlin + Compose) — емулира NFC картичка (HCE)
-└── web-dashboard/    ← Web Dashboard (HTML + Tailwind + Chart.js)
-```
-
----
-
 ## Како работи NFC
 
 Системот користи **Host-based Card Emulation (HCE)** на студентската апликација и **Reader Mode** (foreground dispatch) на професорската. Не се потребни физички тагови.
@@ -354,46 +329,6 @@ Base URL (dev): `http://localhost:8080` · Swagger UI: `http://localhost:8080/do
 
 ---
 
-## Брз старт
-
-### 1. Backend
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # пополни DATABASE_URL + JWT_SECRET
-uvicorn main:app --host 0.0.0.0 --port 8080
-```
-- API: <http://localhost:8080> · Swagger: <http://localhost:8080/docs>
-
-### 2. База (Supabase)
-Копирај `database/schema.sql` во Supabase SQL editor. Види `database/README.md`.
-
-### 3. Демо податоци (опционално)
-```bash
-cd backend && python seed_demo.py        # бара покренат backend
-```
-
-### 4. Мобилни апликации
-```bash
-cd teacher-app && ./gradlew assembleDebug
-# APK: teacher-app/app/build/outputs/apk/debug/app-debug.apk
-
-cd student-app && ./gradlew assembleDebug
-# APK: student-app/app/build/outputs/apk/debug/app-debug.apk
-```
-> Емулатор: `10.0.2.2` се мапира на host `localhost`.
-
-### 5. Веб дашборд
-```bash
-cd web-dashboard
-python3 -m http.server 8000   # отвори http://localhost:8000
-```
-> Или само отвори `http://localhost:8080/` — backend-от сам го сервира дашбордот (без CORS проблеми).
-
----
-
 ## Docker
 
 **Default — користи Supabase** (пополни `backend/.env` прво):
@@ -432,40 +367,12 @@ Postgres се иницијализира автоматски со `database/sch
 ```kotlin
 const val BASE_URL = "https://tapin-XXXX.onrender.com"
 ```
-
 ---
 
-## Тестирање
-
-```bash
-cd backend
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-pytest
-```
-
-Тестовите користат **in-memory SQLite** — не ти треба Supabase. Покриваат: register/login/me, courses CRUD, sessions, attendance sync + filter + pagination, statistics (overview/per-course/trend), валидација на NFC потпис (`secure_nfc`), и еднозначност на статус кодови (`401`/`403`/`404`/`409`).
-
-```
-backend/tests/
-├── test_health.py
-├── test_auth.py
-├── test_courses.py
-├── test_attendance_flow.py
-├── test_statistics.py
-└── test_secure_nfc.py
-```
-
----
-
-## Демо акаунти
-
-По `python seed_demo.py`:
+## Демо профили
 
 | Улога | Е-пошта | Лозинка |
 |-------|---------|---------|
-| Професор | `prof.demo@ugd.edu.mk` | `demo1234` |
-| Студенти | `s200001@ugd.edu.mk` … `s200008@ugd.edu.mk` | `student123` |
-
-Seed-от создава 1 професор, 2 предмети, 8 студенти, 4 сесии (1 активна по предмет) и ~25 случајни тапови за реалистична статистика.
-
+| Професор | `irena.eftimova@ugd.edu.mk` | `irena123` |
+| Професор | `goran.milososki@ugd.edu.mk` | `goran123` |
+| Студенти | `daniel.102708@student.ugd.edu.mk`| `daniel123` |
